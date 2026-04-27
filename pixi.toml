@@ -1,0 +1,10 @@
+[workspace]
+authors = ["Fomalhaut647 <fomalhaut@stu.pku.edu.cn>"]
+channels = ["conda-forge"]
+name = "Avalon"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
