@@ -1,2 +1,2 @@
-# SCM syntax highlighting & preventing 3-way merges
-pixi.lock merge=binary linguist-language=YAML linguist-generated=true -diff
+# uv 生成的锁文件：GitHub 上折叠 diff
+uv.lock linguist-generated=true

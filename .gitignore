@@ -1,3 +1,16 @@
-# pixi environments
-.pixi/*
-!.pixi/config.toml
+# secrets
+.env
+
+# python / uv
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+dist/
+
+# 每局对局产物
+games/
+
+# macOS
+.DS_Store
