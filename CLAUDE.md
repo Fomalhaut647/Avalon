@@ -22,7 +22,7 @@
 uv sync
 uv run pytest                          # 全部不联网
 uv run avalon --random-players --seed 1  # 不联网自检整局
-uv run avalon --seed 42                  # 真实模型，一局约 20 到 40 分钟
+uv run avalon --seed 42                  # 真实模型，隐藏思考关闭时一局约 3 到 5 分钟
 ```
 
 .env 含 API key，已 gitignore，不要提交、不要打印其内容。
