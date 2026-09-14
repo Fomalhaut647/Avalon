@@ -101,8 +101,20 @@ def test_system_prompt_contains_identity_and_hidden_info():
     assert "P5" in text and "莫甘娜" in text
     text = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo())
     assert "没有任何隐藏信息" in text
-    for mark in prompts.ALL_MARKS:
-        assert mark in text
+
+
+def test_system_prompt_format_section_matches_role():
+    common = (MARK_PRIVATE, MARK_SPEECH, MARK_TEAM, MARK_VOTE)
+    servant = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo())
+    morgana = prompts.system_prompt("P1", Role.MORGANA, HiddenInfo(fellow_evil="P2"))
+    assassin = prompts.system_prompt("P2", Role.ASSASSIN, HiddenInfo(fellow_evil="P1"))
+    for text in (servant, morgana, assassin):
+        for mark in common:
+            assert mark in text
+    # 好人不会被要求出任务牌或刺杀，格式说明里不列这两项；规则段仍提到刺客与失败牌。
+    assert f"{MARK_QUEST}成功" not in servant and f"{MARK_ASSASSINATE}P3" not in servant
+    assert f"{MARK_QUEST}成功" in morgana and f"{MARK_ASSASSINATE}P3" not in morgana
+    assert f"{MARK_QUEST}成功" in assassin and f"{MARK_ASSASSINATE}P3" in assassin
 
 
 def test_system_prompt_does_not_leak_other_roles():

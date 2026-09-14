@@ -53,6 +53,8 @@ class Reply:
     target: str | None = None
     raw: str = ""
     """模型原始输出，仅供日志。"""
+    fallback: bool = False
+    """是否为裁判兜底生成，而非玩家所答。"""
 
 
 class InvalidReply(ValueError):

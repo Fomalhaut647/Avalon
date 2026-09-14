@@ -75,6 +75,19 @@ def _goal_text(role: Role) -> str:
     return goal
 
 
+def _format_lines(role: Role) -> str:
+    """输出格式说明只列该角色可能被要求输出的标记。规则本身对所有人相同。"""
+    lines = [
+        f"{MARK_TEAM}P2, P4 （你当队长做总结时需要，人数必须等于本次任务的规定人数，可以包含你自己）",
+        f"{MARK_VOTE}赞成 （投票时需要，只写\"赞成\"或\"反对\"）",
+    ]
+    if side_of(role) == Side.EVIL:
+        lines.append(f"{MARK_QUEST}成功 （你在队伍中执行任务时需要，只写\"成功\"或\"失败\"）")
+    if role == Role.ASSASSIN:
+        lines.append(f"{MARK_ASSASSINATE}P3 （刺杀时需要，只写一个座位编号）")
+    return "\n".join(lines)
+
+
 def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
     """规则摘要、座位、角色、隐藏信息、阵营目标、输出格式、发言风格要求。"""
     sizes = "、".join(str(n) for n in QUEST_SIZES)
@@ -120,12 +133,9 @@ def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
 {MARK_SPEECH}
 （对全桌说的话。发言、提案时需要。）
 
-{MARK_TEAM}P2, P4 （提案时需要，人数必须等于本次任务的规定人数，可以包含你自己）
-{MARK_VOTE}赞成 （投票时需要，只写"赞成"或"反对"）
-{MARK_QUEST}成功 （执行任务时需要，只写"成功"或"失败"）
-{MARK_ASSASSINATE}P3 （刺杀时需要，只写一个座位编号）
+{_format_lines(role)}
 
-每次只输出本次行动需要的标记，不要输出无关标记。
+每次只输出本次行动需要的标记，裁判在每次通知里都会说明本次需要哪几段。
 
 # 关于私下分析
 

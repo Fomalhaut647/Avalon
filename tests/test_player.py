@@ -14,7 +14,7 @@ class FakeClient:
 
     def complete(self, messages):
         self.seen.append([dict(m) for m in messages])
-        return LLMResult(text=self.replies.pop(0), prompt_tokens=10, completion_tokens=5, latency_s=0.1)
+        return LLMResult(text=self.replies.pop(0), prompt_tokens=10, completion_tokens=5, latency_s=0.1, reasoning="隐藏推理")
 
 
 def notice(action: Action, reason: str | None = None) -> Notice:
@@ -40,8 +40,12 @@ def test_thread_grows_by_two_per_turn_and_keeps_system_prompt():
     assert "事件甲" in p.messages[1]["content"] and "请发言" in p.messages[1]["content"]
     # 第二次调用发送的是整条线程。
     assert len(client.seen[1]) == 4
-    assert [c.prompt_tokens for c in p.drain_calls()] == [10, 10]
+    calls = p.drain_calls()
+    assert [c.prompt_tokens for c in calls] == [10, 10]
+    assert all(c.reasoning == "隐藏推理" for c in calls)
     assert p.drain_calls() == []
+    # 隐藏推理不进线程。
+    assert all("隐藏推理" not in m["content"] for m in p.messages)
 
 
 def test_invalid_reply_is_kept_in_thread_and_raised():

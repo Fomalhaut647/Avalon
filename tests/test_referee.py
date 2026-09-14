@@ -189,16 +189,32 @@ def test_hidden_info_in_brief_matches_roles(tmp_path):
 def test_notices_carry_incremental_events_only(tmp_path):
     players = {pid: ScriptedPlayer(pid, vote=True, card=True) for pid in PLAYER_IDS}
     referee, _ = run_game(tmp_path, players, seed=2)
-    for p in players.values():
+    for pid, p in players.items():
         seen: list[str] = []
         for n in p.notices:
             if n.rejection_reason:
                 continue
             seen.extend(n.public_events)
-        # 每名玩家收到的事件是公开记录的一个前缀，不重复、不乱序。
-        assert seen == referee.public_log[: len(seen)]
-        # 至少能看到全部发言、投票、任务结果（游戏结束公告除外，不再发通知）。
-        assert len(referee.public_log) - len(seen) <= 6
+        # 每名玩家收到的事件是"公开记录去掉自己的发言"的一个前缀，不重复、不乱序。
+        expected = [e.text for e in referee.public_log if e.skip_for != pid]
+        assert seen == expected[: len(seen)]
+        # 自己的发言一条都没收到，别人的发言一条不少。
+        assert not any(s.startswith(f"{pid} 发言：") for s in seen)
+        assert sum(1 for s in seen if " 发言：" in s) == len(referee.state.speeches) - sum(
+            1 for sp in referee.state.speeches if sp.speaker == pid
+        )
+        # 至少能看到全部投票、任务结果（游戏结束公告除外，不再发通知）。
+        assert len(expected) - len(seen) <= 6
+
+
+def test_fallback_speech_is_sent_back_to_its_author(tmp_path):
+    players = {pid: BrokenPlayer(pid) for pid in PLAYER_IDS}
+    referee, _ = run_game(tmp_path, players, seed=1)
+    for pid, p in players.items():
+        own = FALLBACK_SPEECH.format(pid=pid)
+        seen = [e for n in p.notices for e in n.public_events]
+        assert any(own in s for s in seen), "兜底发言不是玩家自己写的，应当发回给他"
+
 
 
 def test_broken_players_fall_back_and_finish(tmp_path):

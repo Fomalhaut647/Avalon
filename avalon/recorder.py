@@ -84,9 +84,18 @@ class Recorder:
             (self.players_dir / f"{player_id}.json").write_text(_json(messages), encoding="utf-8")
 
     def save_result(self, state: GameState) -> None:
+        started = self.events[0]["ts"] if self.events else None
+        finished = self.events[-1]["ts"] if self.events else None
+        duration_s = None
+        if started and finished:
+            duration_s = int((datetime.fromisoformat(finished) - datetime.fromisoformat(started)).total_seconds())
         result = {
             "game_id": state.game_id,
             "seed": state.seed,
+            "started_at": started,
+            "finished_at": finished,
+            "duration_s": duration_s,
+            "thinking": self.events[0].get("thinking") if self.events else None,
             "assignments": {pid: role.value for pid, role in state.assignments.items()},
             "winner": state.winner.value if state.winner else None,
             "win_reason": state.win_reason,

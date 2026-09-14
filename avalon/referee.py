@@ -9,6 +9,7 @@ from __future__ import annotations
 import random
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 from avalon import prompts, rules
 from avalon.config import Config
@@ -19,6 +20,13 @@ from avalon.state import GameState, Phase, Proposal, Quest, Speech
 
 Validator = Callable[[Reply], str | None]
 """返回 None 表示合法，否则返回退回给玩家的原因。"""
+
+
+@dataclass(frozen=True)
+class PublicEvent:
+    text: str
+    skip_for: str | None = None
+    """不向这名玩家重发：他自己刚说过的话已在他的线程里。兜底发言不是他说的，照常发。"""
 
 
 class Referee:
@@ -38,8 +46,8 @@ class Referee:
         self.on_public = on_public
         self.on_private = on_private
         self.state = GameState(game_id=recorder.game_dir.name, seed=config.seed)
-        self.public_log: list[str] = []
-        """全部公开事件的文字，按时间排列。"""
+        self.public_log: list[PublicEvent] = []
+        """全部公开事件，按时间排列。"""
         self.cursor: dict[str, int] = {pid: 0 for pid in PLAYER_IDS}
         """每名玩家已经收到的公开事件数。"""
 
@@ -72,6 +80,7 @@ class Referee:
             game_id=s.game_id,
             seed=s.seed,
             seat_models=self.config.seat_models,
+            thinking=self.config.thinking,
             assignments={pid: r.value for pid, r in s.assignments.items()},
         )
         for pid in PLAYER_IDS:
@@ -107,7 +116,7 @@ class Referee:
                 validate=lambda r: None if r.public_speech else prompts.reason_bad_speech(),
                 fallback=lambda: Reply(private_analysis="", public_speech=prompts.FALLBACK_SPEECH.format(pid=pid)),
             )
-            self._record_speech(pid, reply.public_speech or "")
+            self._record_speech(pid, reply)
         self.state.phase = Phase.PROPOSAL
 
     def _proposal(self) -> None:
@@ -139,7 +148,7 @@ class Referee:
             team_size=quest.size,
             candidates=PLAYER_IDS,
         )
-        self._record_speech(leader, reply.public_speech or "")
+        self._record_speech(leader, reply)
         proposal.team = tuple(pid for pid in PLAYER_IDS if pid in (reply.team or ()))
         self.recorder.event("team", quest=quest.index, proposal=proposal.index, leader=leader, team=list(proposal.team))
         self._publish(prompts.event_team(leader, proposal.team))
@@ -306,6 +315,7 @@ class Referee:
             self.recorder.event("invalid_reply", player=pid, action=action.value, attempt=attempt, reason=error, **ctx)
             reason = error
         fb = fallback()
+        fb.fallback = True
         value = fb.public_speech or fb.team or fb.target
         if fb.vote is not None:
             value = "赞成" if fb.vote else "反对"
@@ -324,7 +334,7 @@ class Referee:
         team_size: int | None,
         candidates: tuple[str, ...],
     ) -> Notice:
-        events = tuple(self.public_log[self.cursor[pid] :])
+        events = tuple(e.text for e in self.public_log[self.cursor[pid] :] if e.skip_for != pid)
         self.cursor[pid] = len(self.public_log)
         return Notice(
             player_id=pid,
@@ -348,16 +358,17 @@ class Referee:
 
     # ------------------------------------------------------------ 记录
 
-    def _publish(self, text: str) -> None:
-        self.public_log.append(text)
+    def _publish(self, text: str, skip_for: str | None = None) -> None:
+        self.public_log.append(PublicEvent(text, skip_for))
         if self.on_public:
             self.on_public(text)
 
-    def _record_speech(self, pid: str, content: str) -> None:
+    def _record_speech(self, pid: str, reply: Reply) -> None:
+        content = reply.public_speech or ""
         quest = self.state.current_quest
         proposal = self.state.current_proposal
         self.state.speeches.append(Speech(pid, content, quest.index, proposal.index))
-        self._publish(prompts.event_speech(pid, content))
+        self._publish(prompts.event_speech(pid, content), skip_for=None if reply.fallback else pid)
 
     def _record_turn(self, pid: str, action: Action, reply: Reply, attempt: int, **extra: object) -> None:
         self.recorder.event(
@@ -386,6 +397,7 @@ class Referee:
                 prompt_tokens=call.prompt_tokens,
                 completion_tokens=call.completion_tokens,
                 latency_s=round(call.latency_s, 2),
+                reasoning=call.reasoning,
             )
 
     def _save_thread(self, pid: str) -> None:

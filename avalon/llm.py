@@ -22,6 +22,8 @@ class LLMResult:
     prompt_tokens: int
     completion_tokens: int
     latency_s: float
+    reasoning: str | None = None
+    """开启隐藏思考时接口返回的推理原文。不进玩家线程，只记裁判日志。"""
 
 
 class LLMClient:
@@ -79,11 +81,14 @@ class LLMClient:
             print(f"[llm] {self.model} 请求失败（第 {i + 1} 次）：{err}，{delay:.0f} 秒后重试", file=sys.stderr)
             time.sleep(delay)
         latency = time.monotonic() - t0
-        text = (resp.choices[0].message.content or "") if resp.choices else ""
+        message = resp.choices[0].message if resp.choices else None
+        text = (message.content or "") if message else ""
+        reasoning = getattr(message, "reasoning_content", None) if message else None
         usage = resp.usage
         return LLMResult(
             text=text,
             prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
             completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
             latency_s=latency,
+            reasoning=reasoning or None,
         )
