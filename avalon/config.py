@@ -12,6 +12,20 @@ DEFAULT_BASE_URL = "https://api.deepseek.com"
 DEFAULT_MODEL = "deepseek-flash"
 """DeepSeek 接口上 V4.1 Flash 的模型 ID。"""
 
+PRICES_CNY_PER_MILLION: dict[str, dict[str, float]] = {
+    "deepseek-flash": {"cache_hit": 0.02, "cache_miss": 1.0, "output": 4.0},
+    "deepseek-v4-pro": {"cache_hit": 0.15, "cache_miss": 4.5, "output": 13.5},
+}
+"""DeepSeek 空闲时段价格，元/百万 token，2026-09 价目表。高峰时段为两倍。输出价含隐藏推理 token。"""
+
+
+def estimate_cost_cny(model: str, cache_hit: int, cache_miss: int, output: int) -> float | None:
+    """按空闲时段价格估算一次调用的费用。未知模型返回 None。"""
+    price = PRICES_CNY_PER_MILLION.get(model)
+    if price is None:
+        return None
+    return (cache_hit * price["cache_hit"] + cache_miss * price["cache_miss"] + output * price["output"]) / 1_000_000
+
 
 class ConfigError(RuntimeError):
     pass

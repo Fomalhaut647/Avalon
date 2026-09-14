@@ -24,6 +24,14 @@ class LLMResult:
     latency_s: float
     reasoning: str | None = None
     """开启隐藏思考时接口返回的推理原文。不进玩家线程，只记裁判日志。"""
+    reasoning_tokens: int = 0
+    """输出 token 中属于隐藏推理的部分，已包含在 completion_tokens 内。"""
+    cache_hit_tokens: int = 0
+    cache_miss_tokens: int = 0
+    """输入 token 中命中/未命中前缀缓存的部分，两者之和等于 prompt_tokens。"""
+    finish_reason: str | None = None
+    usage_raw: dict | None = None
+    """接口返回的 usage 原样（去掉空值），以防日后字段变化。"""
 
 
 class LLMClient:
@@ -81,14 +89,23 @@ class LLMClient:
             print(f"[llm] {self.model} 请求失败（第 {i + 1} 次）：{err}，{delay:.0f} 秒后重试", file=sys.stderr)
             time.sleep(delay)
         latency = time.monotonic() - t0
-        message = resp.choices[0].message if resp.choices else None
+        choice = resp.choices[0] if resp.choices else None
+        message = choice.message if choice else None
         text = (message.content or "") if message else ""
         reasoning = getattr(message, "reasoning_content", None) if message else None
-        usage = resp.usage
+        usage = resp.usage.model_dump(exclude_none=True) if resp.usage else {}
+        prompt_tokens = int(usage.get("prompt_tokens", 0))
+        hit = int(usage.get("prompt_cache_hit_tokens", usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)))
+        miss = int(usage.get("prompt_cache_miss_tokens", prompt_tokens - hit))
         return LLMResult(
             text=text,
-            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
-            completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=int(usage.get("completion_tokens", 0)),
             latency_s=latency,
             reasoning=reasoning or None,
+            reasoning_tokens=int(usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)),
+            cache_hit_tokens=hit,
+            cache_miss_tokens=miss,
+            finish_reason=choice.finish_reason if choice else None,
+            usage_raw=usage or None,
         )

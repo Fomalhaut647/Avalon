@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from avalon import prompts, rules
-from avalon.config import Config
+from avalon.config import Config, estimate_cost_cny
 from avalon.player import Action, InvalidReply, Notice, Player, Reply
 from avalon.recorder import Recorder
 from avalon.rules import PLAYER_IDS, Role, Side
@@ -96,7 +96,10 @@ class Referee:
         s.quests.append(quest)
         self.recorder.event("quest_start", quest=index, size=quest.size)
         self._publish(prompts.event_quest_start(index, quest.size))
-        self._start_proposal(self.rng.choice(PLAYER_IDS), rotated=False)
+        if index == 1:
+            self._start_proposal(self.rng.choice(PLAYER_IDS), rotated=False)
+        else:
+            self._start_proposal(rules.next_seat(s.quests[-2].proposals[-1].leader), rotated=True)
 
     def _start_proposal(self, leader: str, rotated: bool) -> None:
         quest = self.state.current_quest
@@ -389,14 +392,22 @@ class Referee:
         self._save_thread(pid)
 
     def _record_calls(self, pid: str) -> None:
+        model = self.config.seat_models.get(pid, "")
         for call in self.players[pid].drain_calls():
+            cost = estimate_cost_cny(model, call.cache_hit_tokens, call.cache_miss_tokens, call.completion_tokens)
             self.recorder.event(
                 "llm_call",
                 player=pid,
-                model=self.config.seat_models.get(pid),
+                model=model,
                 prompt_tokens=call.prompt_tokens,
                 completion_tokens=call.completion_tokens,
+                reasoning_tokens=call.reasoning_tokens,
+                cache_hit_tokens=call.cache_hit_tokens,
+                cache_miss_tokens=call.cache_miss_tokens,
+                finish_reason=call.finish_reason,
                 latency_s=round(call.latency_s, 2),
+                cost_cny=None if cost is None else round(cost, 6),
+                usage=call.usage_raw,
                 reasoning=call.reasoning,
             )
 

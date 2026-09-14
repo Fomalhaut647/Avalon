@@ -92,6 +92,10 @@ def check_invariants(referee: Referee) -> None:
             assert q.succeeded is (q.fail_count == 0)
         else:
             assert q.succeeded is None
+    # 队长按座位顺时针轮转：全局所有提案的队长连成一条顺时针链，跨任务也不断。
+    leaders = [p.leader for q in s.quests for p in q.proposals]
+    for a, b in zip(leaders, leaders[1:]):
+        assert rules.next_seat(a) == b
     if s.win_reason == "five_rejections":
         assert s.quests[-1].rejections == 5 and s.winner == Side.EVIL
     elif s.win_reason == "three_failures":

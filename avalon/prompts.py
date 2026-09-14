@@ -104,11 +104,11 @@ def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
 一局最多 5 次任务，第 1 到第 5 次任务的队伍人数依次为 {sizes}。任一阵营先达到 {WINS_NEEDED} 次即分出胜负。
 
 每次任务的流程：
-1. 裁判随机指定一名队长。
+1. 队长按座位顺时针轮转：开局由裁判随机指定第一任队长，此后每次提案结束，无论通过还是否决，队长都换给下一位。
 2. 队长先发言一次；然后从队长的下一位开始顺时针，其余四人各发言一次；最后回到队长做总结发言，并在同一次行动中指派队伍。每次只有一人发言，发言者能看到此前全部公开内容。
 3. 全体五人同时对队伍投赞成或反对，不发言。赞成达到 {VOTES_TO_APPROVE} 票则通过。
 4. 通过：队伍成员各自私下出一张任务牌。好人只能出成功；邪恶可以出成功或失败。出现 1 张失败牌任务即失败。裁判公布任务成败与失败牌张数，不公布出自谁。
-5. 否决：队长顺时针换下一位，回到第 2 步。同一次任务内累计 {MAX_PROPOSALS_PER_QUEST} 次否决，邪恶直接获胜。
+5. 否决：队长换下一位，回到第 2 步。同一次任务内累计 {MAX_PROPOSALS_PER_QUEST} 次否决，邪恶直接获胜。
 
 终局：邪恶累计 3 次任务失败则邪恶获胜。好人累计 3 次任务成功后进入刺杀：刺客独自指定一名玩家，刺中梅林则邪恶获胜，否则好人获胜。
 
@@ -157,7 +157,7 @@ def event_quest_start(quest_index: int, size: int) -> str:
 
 
 def event_leader(quest_index: int, proposal_index: int, leader: str, rotated: bool) -> str:
-    how = "队长顺延为" if rotated else "裁判随机指定队长为"
+    how = "队长轮转到" if rotated else "裁判随机指定第一任队长为"
     return f"第 {quest_index} 次任务第 {proposal_index} 次提案：{how} {leader}。"
 
 

@@ -81,7 +81,11 @@ def main() -> None:
         print("\n已中断，已落盘的内容在", recorder.game_dir, file=sys.stderr)
         sys.exit(130)
     elapsed = time.monotonic() - started
-    print(f"\n用时 {elapsed / 60:.1f} 分钟。复盘：{recorder.game_dir / 'transcript.md'}")
+    import json
+
+    result = json.loads((recorder.game_dir / "result.json").read_text(encoding="utf-8"))
+    cost = f"，预计费用 {result['cost_cny']:.3f} 元（空闲时段价）" if result.get("llm_calls") else ""
+    print(f"\n用时 {elapsed / 60:.1f} 分钟{cost}。复盘：{recorder.game_dir / 'transcript.md'}")
 
 
 if __name__ == "__main__":

@@ -89,6 +89,7 @@ class Recorder:
         duration_s = None
         if started and finished:
             duration_s = int((datetime.fromisoformat(finished) - datetime.fromisoformat(started)).total_seconds())
+        calls = [e for e in self.events if e["kind"] == "llm_call"]
         result = {
             "game_id": state.game_id,
             "seed": state.seed,
@@ -105,11 +106,14 @@ class Recorder:
             "quests_played": len(state.quests),
             "fallbacks": sum(1 for e in self.events if e["kind"] == "fallback"),
             "invalid_replies": sum(1 for e in self.events if e["kind"] == "invalid_reply"),
-            "prompt_tokens": sum(e.get("prompt_tokens", 0) for e in self.events if e["kind"] == "llm_call"),
-            "completion_tokens": sum(
-                e.get("completion_tokens", 0) for e in self.events if e["kind"] == "llm_call"
-            ),
-            "llm_calls": sum(1 for e in self.events if e["kind"] == "llm_call"),
+            "llm_calls": len(calls),
+            "prompt_tokens": sum(e.get("prompt_tokens", 0) for e in calls),
+            "completion_tokens": sum(e.get("completion_tokens", 0) for e in calls),
+            "reasoning_tokens": sum(e.get("reasoning_tokens", 0) for e in calls),
+            "cache_hit_tokens": sum(e.get("cache_hit_tokens", 0) for e in calls),
+            "cache_miss_tokens": sum(e.get("cache_miss_tokens", 0) for e in calls),
+            "cost_cny": round(sum(e.get("cost_cny") or 0 for e in calls), 4),
+            "cost_note": "按 DeepSeek 空闲时段价格估算，高峰时段约为两倍",
         }
         with self._lock:
             (self.game_dir / "result.json").write_text(_json(result), encoding="utf-8")

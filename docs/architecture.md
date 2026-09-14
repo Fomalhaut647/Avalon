@@ -105,14 +105,14 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> INIT
-    INIT --> DISCUSSION: 分配角色，开始第 1 次任务，随机队长
+    INIT --> DISCUSSION: 分配角色，开始第 1 次任务，随机第一任队长
     DISCUSSION --> PROPOSAL: 6 次发言中的前 5 次完成
     PROPOSAL --> VOTING: 队长总结并指派队伍
     VOTING --> QUEST_EXECUTION: 赞成 ≥ 3
     VOTING --> DISCUSSION: 否决且否决数 < 5，队长顺延
     VOTING --> GAME_OVER: 第 5 次否决，邪恶胜
     QUEST_EXECUTION --> QUEST_RESULT: 收齐任务牌
-    QUEST_RESULT --> DISCUSSION: 双方均未到 3，下一次任务，随机队长
+    QUEST_RESULT --> DISCUSSION: 双方均未到 3，下一次任务，队长顺延
     QUEST_RESULT --> ASSASSINATION: 好人 3 胜
     QUEST_RESULT --> GAME_OVER: 邪恶 3 败
     ASSASSINATION --> GAME_OVER: 刺中 Merlin 邪恶胜，否则好人胜
@@ -123,7 +123,7 @@ stateDiagram-v2
 
 | 阶段 | 裁判动作 | 与谁交互 |
 |---|---|---|
-| INIT | 随机分配角色，生成每人的隐藏信息，写 system prompt，随机首任队长 | 无 |
+| INIT | 随机分配角色，生成每人的隐藏信息，写 system prompt，随机一局的第一任队长 | 无 |
 | DISCUSSION | 依次向队长、队长下一位……共 5 人发"发言"通知 | 5 人依次 |
 | PROPOSAL | 向队长发"总结并指派"通知，校验队伍 | 队长 |
 | VOTING | 向 5 人发"投票"通知，收齐后公布每人的票 | 5 人。逻辑上同时；默认并发请求，`--sequential` 改为依次。玩家看不到彼此的票 |
@@ -166,9 +166,9 @@ avalon/
 | 文件 | 内容 | 给谁看 |
 |---|---|---|
 | `public.json` | 公开状态：座位、历次任务的队伍与投票与结果、比分、胜方，以及完整的公开发言记录 | 程序、人 |
-| `events.jsonl` | 裁判视角的全部事件，一行一条，含角色分配、每张任务牌出自谁、每次行动的私下分析、非法答案与兜底、每次 API 调用的 token 与耗时，以及开启隐藏思考时接口返回的推理原文 | 程序 |
+| `events.jsonl` | 裁判视角的全部事件，一行一条，含角色分配、每张任务牌出自谁、每次行动的私下分析、非法答案与兜底、每次 API 调用的耗时、结束原因、完整 usage（输入、输出、推理、缓存命中与未命中的 token 数）、按价目表估算的费用，以及开启隐藏思考时接口返回的推理原文 | 程序 |
 | `players/P1.json` … `P5.json` | 每个玩家完整的 `messages` 线程，即该玩家在局中每一刻确切看到和说过的一切 | 程序、人 |
-| `result.json` | 全部角色、胜方、胜利方式、刺杀目标 | 程序 |
+| `result.json` | 全部角色、胜方、胜利方式、刺杀目标、时长、调用次数、各类 token 合计、估算费用、不合法与兜底次数 | 程序 |
 | `transcript.md` | 按时间排版的复盘稿：每条公开发言、每次投票、每次任务结果，以及每名玩家当时的私下分析，私下分析以明显标记区分 | 人 |
 
 `games/` 整体被 gitignore。
@@ -185,6 +185,7 @@ avalon/
 | 随机种子 | 命令行 | 控制角色分配与队长随机。模型输出本身不可复现 |
 | 重试次数 | `config.py` | 同一次行动内连续 3 次不合法即兜底；API 网络错误与 429/5xx 由 SDK 另行重试 3 次 |
 | 并发 | 命令行 | 默认并发请求投票与执行任务，`--sequential` 关闭 |
+| 价目表 | `config.py` | 每个模型的缓存命中输入、未命中输入、输出三项单价，取 DeepSeek 空闲时段价；费用估算只是参考，高峰时段约为两倍 |
 
 ## 八、测试策略
 
@@ -205,4 +206,4 @@ uv run avalon --seed 42
 
 命令行参数：`--seed` 随机种子，缺省随机生成并打印；`--games-dir` 产物目录，默认 `games/`；`--random-players` 用随机玩家跑一局，不联网，用于自检；`--sequential` 关闭并发；`--quiet` 终端不打印私下分析。
 
-运行中终端实时打印公开事件与每名玩家的私下分析。一局结束后在 `games/<id>/transcript.md` 复盘。
+运行中终端实时打印公开事件与每名玩家的私下分析，结束时打印用时与估算费用。一局结束后在 `games/<id>/transcript.md` 复盘。
