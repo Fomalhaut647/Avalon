@@ -96,7 +96,7 @@ v1 的做法：公开记录全程完整保留，玩家的私下分析随其对�
 ### 3.2 玩家建模
 
 - 人格系统：给每个座位不同的风格、激进程度、表达习惯，缓解同模型同质化。
-- 分身份的策略提示词："如何玩好 Merlin / Percival / Assassin"等。
+- 分身份的策略提示词："如何玩好 Merlin / Percival / Assassin"等。实跑显示梅林几乎必被刺中（见 [experiments.md](experiments.md)），这是最先需要它的地方。
 - 每个座位接入不同模型，做模型间对比。见 [decisions/0005](decisions/0005-single-model-all-seats.md)。.env 中已备有 DeepSeek、GLM、Kimi、Qwen、MiniMax、MiMo、Gemini 的 key。
 - 让人类坐进一个座位，与 AI 同桌。只需一个从终端读输入的 `Player` 实现。
 

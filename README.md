@@ -8,6 +8,7 @@
 - [docs/architecture.md](docs/architecture.md)：系统结构、信息流、模块职责、落盘内容
 - [docs/decisions/](docs/decisions/)：设计决策记录，回答"为什么这样做"
 - [docs/roadmap.md](docs/roadmap.md)：v1 刻意不做、日后可能做的方向
+- [docs/experiments.md](docs/experiments.md)：真实模型对局的记录与观察
 - [docs/archive/](docs/archive/)：最初的需求文档，仅历史参考
 
 ## 运行

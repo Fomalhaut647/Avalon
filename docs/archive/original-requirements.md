@@ -1,3 +1,5 @@
+> 起草日期：2026-04-27
+
 > **归档说明**：本文是项目最初的需求提示词，原文件名 `阿瓦隆框架.md`，2026-09-13 归档，仅作历史参考。
 > 当前有效的规则见 [rules.md](../rules.md)，架构见 [architecture.md](../architecture.md)，其中被替换的机制见 [roadmap.md](../roadmap.md) 与 [decisions/](../decisions/)。
 
