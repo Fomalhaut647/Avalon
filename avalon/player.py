@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import random
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
-from avalon.llm import LLMClient
+from avalon.llm import LLMClient, LLMResult
 
 
 class Action(str, Enum):
@@ -55,9 +55,16 @@ class Reply:
     """模型原始输出，仅供日志。"""
 
 
+class InvalidReply(ValueError):
+    """答案无法解析或不合法。裁判据此把原因退回给玩家重答。"""
+
+
 class Player(ABC):
     def __init__(self, player_id: str) -> None:
         self.player_id = player_id
+        self.messages: list[dict[str, str]] = []
+        """对话线程。非 LLM 玩家保持为空。"""
+        self._calls: list[LLMResult] = []
 
     @abstractmethod
     def brief(self, system_prompt: str) -> None:
@@ -65,7 +72,12 @@ class Player(ABC):
 
     @abstractmethod
     def act(self, notice: Notice) -> Reply:
-        """收到通知，返回答案。"""
+        """收到通知，返回答案。格式不合法时抛 InvalidReply。"""
+
+    def drain_calls(self) -> list[LLMResult]:
+        """取走自上次取走以来的 API 调用记录，供裁判记日志。"""
+        calls, self._calls = self._calls, []
+        return calls
 
 
 class LLMPlayer(Player):
@@ -74,13 +86,22 @@ class LLMPlayer(Player):
     def __init__(self, player_id: str, client: LLMClient) -> None:
         super().__init__(player_id)
         self.client = client
-        self.messages: list[dict[str, str]] = []
 
     def brief(self, system_prompt: str) -> None:
-        raise NotImplementedError
+        self.messages = [{"role": "system", "content": system_prompt}]
 
     def act(self, notice: Notice) -> Reply:
-        raise NotImplementedError
+        # prompts 依赖本模块的数据类型，这里在函数内导入以避免循环导入。
+        from avalon import prompts
+
+        self.messages.append({"role": "user", "content": prompts.render_notice(notice)})
+        result = self.client.complete(self.messages)
+        self._calls.append(result)
+        self.messages.append({"role": "assistant", "content": result.text})
+        try:
+            return prompts.parse_reply(result.text, notice.action)
+        except ValueError as e:
+            raise InvalidReply(str(e)) from e
 
 
 class RandomPlayer(Player):
@@ -91,7 +112,19 @@ class RandomPlayer(Player):
         self.rng = rng
 
     def brief(self, system_prompt: str) -> None:
-        raise NotImplementedError
+        pass
 
     def act(self, notice: Notice) -> Reply:
-        raise NotImplementedError
+        pid = self.player_id
+        if notice.action == Action.SPEAK:
+            return Reply(private_analysis="", public_speech=f"{pid} 的随机发言。")
+        if notice.action == Action.PROPOSE:
+            team = tuple(sorted(self.rng.sample(notice.candidates, notice.team_size or 0)))
+            return Reply(private_analysis="", public_speech=f"{pid} 的随机总结。", team=team)
+        if notice.action == Action.VOTE:
+            return Reply(private_analysis="", vote=self.rng.random() < 0.5)
+        if notice.action == Action.EXECUTE_QUEST:
+            return Reply(private_analysis="", quest_success=self.rng.random() < 0.5)
+        if notice.action == Action.ASSASSINATE:
+            return Reply(private_analysis="", target=self.rng.choice(notice.candidates))
+        raise ValueError(f"未知行动 {notice.action}")

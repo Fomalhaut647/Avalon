@@ -16,3 +16,4 @@
 | [0003](0003-single-thread-memory.md) | 单线程累积记忆，不清空、不总结、无独立笔记 | 已采纳 |
 | [0004](0004-drop-trust-scores.md) | 删除信任值字段 | 已采纳 |
 | [0005](0005-single-model-all-seats.md) | v1 五个座位统一使用 DeepSeek V4.1 Flash | 已采纳 |
+| [0006](0006-hidden-thinking-off-by-default.md) | 默认关闭模型的隐藏思考，只靠可见的私下分析 | 已采纳 |

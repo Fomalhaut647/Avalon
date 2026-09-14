@@ -14,11 +14,11 @@
 
 ```bash
 uv sync
-cp .env.example .env   # 填入 DEEPSEEK_API_KEY 与 DEEPSEEK_MODEL
+cp .env.example .env   # 填入 DEEPSEEK_API_KEY，模型默认 deepseek-flash
 uv run avalon --seed 42
 ```
 
-一局结束后在 `games/<id>/transcript.md` 复盘。
+一局结束后在 `games/<id>/transcript.md` 复盘。默认关闭模型的隐藏思考，在 `.env` 里写 `DEEPSEEK_THINKING=on` 可开启，代价是一局慢数倍、贵数倍。
 
 ## 测试
 
@@ -26,10 +26,12 @@ uv run avalon --seed 42
 uv run pytest
 ```
 
+不想联网时可以用随机玩家自检整条流程：
+
+```bash
+uv run avalon --random-players --seed 1
+```
+
 ## 状态
 
-框架与文档已就位，游戏逻辑尚未实现。实施顺序：
-
-1. `avalon/rules.py` 的规则函数，补齐 `tests/test_rules.py`。
-2. `RandomPlayer` 与 `avalon/referee.py`，用假玩家跑通整局，补 `tests/test_referee.py`。
-3. `avalon/prompts.py` 与 `avalon/llm.py`，接入真实模型。
+v1 已完成：规则、裁判状态机、DeepSeek 玩家、落盘与复盘稿均已实现，测试全部不联网。后续方向见 [docs/roadmap.md](docs/roadmap.md)。
