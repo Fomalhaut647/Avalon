@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #f4f0e8; color: #211d18; font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: #2f66ad; text-decoration: none; } a:hover { color: #24518a; text-decoration: underline; }
+    .serif { font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .pulse { animation: pulse 1.6s ease-in-out infinite; }
+    @keyframes shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+    .skeleton { background: linear-gradient(90deg, #e9e3d7 0%, #f6f2ea 50%, #e9e3d7 100%); background-size: 600px 100%; animation: shimmer 1.8s linear infinite; border-radius: 3px; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1400px; background: #f4f0e8; display: flex; flex-direction: column; box-sizing: border-box;">
+
+  <div style="height: 60px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: #fffdf8; border-bottom: 1px solid #e2dbcd;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="color: #9a9184; display: inline-flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M11 18l-6-6 6-6"></path></svg></span>
+        <div class="serif" style="font-size: 19px; font-weight: 700; letter-spacing: 0.02em; color: #211d18; white-space: nowrap;">阿瓦隆 · 裁判席</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="mono" style="font-size: 12px; padding: 3px 8px; border: 1px solid #e2dbcd; border-radius: 4px; color: #6b6357; background: #f4f0e8; white-space: nowrap;">局号 20260914-1032-7f3a</span>
+        <span class="mono" style="font-size: 12px; padding: 3px 8px; border: 1px solid #e2dbcd; border-radius: 4px; color: #6b6357; background: #f4f0e8; white-space: nowrap;">种子 42</span>
+        <span class="mono" style="font-size: 12px; padding: 3px 8px; border: 1px solid #e2dbcd; border-radius: 4px; color: #6b6357; background: #f4f0e8; white-space: nowrap;">deepseek-flash</span>
+        <span style="font-size: 12px; padding: 3px 8px; border: 1px solid #e2dbcd; border-radius: 4px; color: #6b6357; background: #f4f0e8; white-space: nowrap;">隐藏思考 关</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 8px; border-radius: 999px; background: #e6f2ea; color: #236b45; font-size: 12px; font-weight: 500;"><span class="pulse" style="width: 8px; height: 8px; border-radius: 50%; background: #2f8a5b; display: inline-block;"></span><span>实时跟随</span></div>
+      <div style="display: flex; align-items: center; border: 1px solid #e2dbcd; border-radius: 6px; background: #fffdf8; overflow: hidden;"><div style="width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: #6b6357; border-right: 1px solid #e2dbcd;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20L9 12l10-8v16z"></path><path d="M5 19V5"></path></svg></div><div style="width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: #6b6357; border-right: 1px solid #e2dbcd;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div><div style="width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: #211d18; border-right: 1px solid #e2dbcd; background: #f4f0e8;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></div><div style="width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: #b9b1a3; border-right: 1px solid #e2dbcd;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></div><div style="width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: #b9b1a3;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8V4z"></path><path d="M19 5v14"></path></svg></div></div>
+      <span class="mono" style="font-size: 12px; color: #6b6357; white-space: nowrap;">事件 71 / 71</span>
+      <span style="width: 1px; height: 18px; background: #e2dbcd;"></span>
+      <span style="font-size: 13px; color: #211d18; white-space: nowrap;">用时 <span class="mono">7 分 58 秒</span></span>
+      <span style="font-size: 13px; color: #211d18; white-space: nowrap;">预计 <span class="mono">0.104</span> 元</span>
+    </div>
+  </div>
+  <div style="box-sizing: border-box; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: #faf7f1; border-bottom: 1px solid #e2dbcd;">
+    <div style="display: flex; align-items: center; gap: 28px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 12px; color: #6b6357; white-space: nowrap;">任务进度<br><span style="color: #9a9184;">圈内为队伍人数</span></span>
+        <div style="display: flex; align-items: flex-start; gap: 10px;"><div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px;"><span class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">2</span><span style="font-size: 11px; color: #24518a; font-weight: 400;">成功</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px;"><span class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; background: #b2403b; color: #fffdf8;">3</span><span style="font-size: 11px; color: #8f312d; font-weight: 400;">失败</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px;"><span class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">2</span><span style="font-size: 11px; color: #24518a; font-weight: 400;">成功</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px;"><span class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">3</span><span style="font-size: 11px; color: #24518a; font-weight: 400;">成功</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px;"><span class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; border: 1px solid #cfc7b8; color: #9a9184; font-weight: 400;">3</span><span style="font-size: 11px; color: #9a9184; font-weight: 400;">未开始</span></div></div>
+      </div>
+      <span style="width: 1px; height: 40px; background: #e2dbcd;"></span>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 12px; color: #6b6357;">比分 <span class="serif" style="font-size: 15px; font-weight: 700; color: #24518a;">好人 3</span> <span style="color: #9a9184;">:</span> <span class="serif" style="font-size: 15px; font-weight: 700; color: #8f312d;">邪恶 1</span></span>
+        <span style="font-size: 12px; color: #9a9184;">任务阶段已结束</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div class="serif" style="font-size: 17px; font-weight: 700; color: #211d18; white-space: nowrap;">刺杀阶段 · 刺客 P4 选择目标</div>
+      <div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">讨论</span><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">提案</span><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">投票</span><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">执行</span><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">结算</span><span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #211d18; color: #fffdf8; font-weight: 500;">刺杀</span></div>
+    </div>
+  </div>
+  <div style="box-sizing: border-box; padding: 20px 24px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 416px; gap: 24px; align-items: start;">
+    <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;"><div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;">
+        <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="mono" style="font-size: 13px; color: #6b6357;">P1</span>
+              <span class="serif" style="font-size: 18px; font-weight: 700; color: #211d18;">忠臣</span>
+            </div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e4ecf7; color: #24518a; font-weight: 500;">好人</span>
+          </div>
+          <div style="font-size: 11px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>无额外信息</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e2dbcd; color: #6b6357;">刺杀候选</span></div>
+          <div style="font-size: 11px; color: #9a9184; line-height: 1.5;">上队 3 · 成功 3<br><span class="mono">17 次调用 · 0.020 元</span></div>
+        </div>
+        <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="mono" style="font-size: 13px; color: #6b6357;">P2</span>
+              <span class="serif" style="font-size: 18px; font-weight: 700; color: #211d18;">莫甘娜</span>
+            </div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f7e4e1; color: #8f312d; font-weight: 500;">邪恶</span>
+          </div>
+          <div style="font-size: 11px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>队友 P4</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px dashed #cfc7b8; color: #9a9184;">刺客队友 · 不可选</span></div>
+          <div style="font-size: 11px; color: #9a9184; line-height: 1.5;">上队 2 · 成功 1 · <span style="color: #8f312d; font-weight: 500;">失败 1</span><br><span class="mono">20 次调用 · 0.024 元</span></div>
+        </div>
+        <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="mono" style="font-size: 13px; color: #6b6357;">P3</span>
+              <span class="serif" style="font-size: 18px; font-weight: 700; color: #211d18;">梅林</span>
+            </div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e4ecf7; color: #24518a; font-weight: 500;">好人</span>
+          </div>
+          <div style="font-size: 11px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>看到 P2、P4 是邪恶</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e2dbcd; color: #6b6357;">刺杀候选</span><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; background: #f6ecd2; color: #8a6418; font-weight: 500;">梅林真身</span></div>
+          <div style="font-size: 11px; color: #9a9184; line-height: 1.5;">上队 2 · 成功 2<br><span class="mono">18 次调用 · 0.021 元</span></div>
+        </div>
+        <div style="background: #fffdf8; border: 2px solid #211d18; border-radius: 6px; padding: 13px 15px; display: flex; flex-direction: column; gap: 9px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="mono" style="font-size: 13px; color: #6b6357;">P4</span>
+              <span class="serif" style="font-size: 18px; font-weight: 700; color: #211d18;">刺客</span>
+            </div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f7e4e1; color: #8f312d; font-weight: 500;">邪恶</span>
+          </div>
+          <div style="font-size: 11px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>队友 P2</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; gap: 6px; background: #211d18; color: #fffdf8; font-weight: 500;"><span class="pulse" style="width: 6px; height: 6px; border-radius: 50%; background: #fffdf8; display: inline-block;"></span>正在选择刺杀目标</span></div>
+          <div style="font-size: 11px; color: #9a9184; line-height: 1.5;">上队 0<br><span class="mono">17 次调用 · 0.020 元</span></div>
+        </div>
+        <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="mono" style="font-size: 13px; color: #6b6357;">P5</span>
+              <span class="serif" style="font-size: 18px; font-weight: 700; color: #211d18;">派西维尔</span>
+            </div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e4ecf7; color: #24518a; font-weight: 500;">好人</span>
+          </div>
+          <div style="font-size: 11px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>看到 P2、P3 之一是梅林</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e2dbcd; color: #6b6357;">刺杀候选</span></div>
+          <div style="font-size: 11px; color: #9a9184; line-height: 1.5;">上队 3 · 成功 3<br><span class="mono">17 次调用 · 0.019 元</span></div>
+        </div></div>
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px 14px; box-sizing: border-box;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <div style="display: flex; align-items: baseline; gap: 12px;"><span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">刺杀阶段</span><span style="font-size: 12px; color: #6b6357;">好人 3 胜 · 刺客一次机会</span></div>
+          <span class="mono" style="font-size: 12px; color: #6b6357;">等待 P4</span>
+        </div>
+        <div style="">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">刺杀</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">进入刺杀阶段</span></div>
+            <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">10:40:03</span>
+          </div>
+          
+          <div style="font-size: 13px; color: #4a443b; line-height: 1.7;">好人在第 4 次任务后达成 3 次成功。裁判向刺客 P4 发出刺杀通知：从 P1、P3、P5 中选择一人，刺中梅林则邪恶反胜，否则好人获胜。P4 的队友 P2 不在候选之列，也不参与决定。</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-bottom: 1px solid #ede7db;">
+          <div class="mono" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; border: 2px solid #b2403b; background: #f7e4e1; color: #8f312d; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0;">P4</div>
+          <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">P4 · 刺客</span><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; gap: 6px; background: #211d18; color: #fffdf8; font-weight: 500;"><span class="pulse" style="width: 6px; height: 6px; border-radius: 50%; background: #fffdf8; display: inline-block;"></span>正在选择目标</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">10:40:03 起 · 已等待 9 秒 · 第 1 次尝试</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 2px;"><div class="skeleton" style="height: 12px; width: 88%;"></div><div class="skeleton" style="height: 12px; width: 70%;"></div><div class="skeleton" style="height: 12px; width: 82%;"></div><div class="skeleton" style="height: 12px; width: 38%;"></div></div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #e2dbcd; color: #6b6357;">线索</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">刺客可见的公开线索</span></div>
+            <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">裁判视角</span>
+          </div>
+          
+          <div style="font-size: 12px; color: #6b6357;">下面是刺客在公开信息里能看到的线索，由裁判从对局记录汇总，供裁判对照它的判断。</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+            
+            <div style="border: 1px solid #e2dbcd; border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: #fffdf8;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;"><div class="mono" style="width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #2f66ad; background: #e4ecf7; color: #24518a; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0;">P1</div><span class="serif" style="font-size: 14px; font-weight: 700; color: #211d18;">P1 · 忠臣</span></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px;"><div style="font-size: 12px; color: #4a443b;">上队 3 次，全部成功</div><div style="font-size: 12px; color: #4a443b;">第 3 次任务当队长，带了 P3</div><div style="font-size: 12px; color: #4a443b;">首个点名 P2 可疑的人</div></div>
+            </div>
+            
+            <div style="border: 1px solid #e2dbcd; border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: #fffdf8;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;"><div class="mono" style="width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #2f66ad; background: #e4ecf7; color: #24518a; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0;">P3</div><span class="serif" style="font-size: 14px; font-weight: 700; color: #211d18;">P3 · 梅林</span></div><span style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #f6ecd2; color: #8a6418; font-weight: 500;">真身</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px;"><div style="font-size: 12px; color: #4a443b;">上队 2 次，全部成功</div><div style="font-size: 12px; color: #4a443b;">当队长 2 次，第 4 次任务提出全好人队伍并通过</div><div style="font-size: 12px; color: #4a443b;">含 P2 的队伍三次全投反对</div></div>
+            </div>
+            
+            <div style="border: 1px solid #e2dbcd; border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: #fffdf8;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;"><div class="mono" style="width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #2f66ad; background: #e4ecf7; color: #24518a; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0;">P5</div><span class="serif" style="font-size: 14px; font-weight: 700; color: #211d18;">P5 · 派西维尔</span></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px;"><div style="font-size: 12px; color: #4a443b;">上队 3 次，第 2 次任务带了 P2</div><div style="font-size: 12px; color: #4a443b;">投票两次与失败队伍同向</div><div style="font-size: 12px; color: #4a443b;">发言多次提到 P3 值得信任</div></div>
+            </div>
+          </div>
+        </div></div>
+      </div></div>
+    <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">任务记录</span><span style="font-size: 11px; color: #9a9184; display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 14px; border-radius: 2px; background: #211d18;"></span>赞成<span style="display: inline-block; width: 16px; height: 14px; border-radius: 2px; border: 1px solid #211d18; box-sizing: border-box; margin-left: 6px;"></span>反对</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span class="mono" style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">2</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">第 1 次任务</span></div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; background: #e4ecf7; color: #24518a; font-weight: 500;">成功</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 34px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 1 · 队长 <span class="mono">P2</span> · 队伍 <span class="mono">P2 P5</span></span>
+                <span class="mono" style="color: #6b6357;">3 : 2 通过</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P5</span></div>
+            </div><div style="font-size: 12px; color: #4a443b; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span style="color: #6b6357;">任务牌</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P2 成功</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P5 成功</span></div></div>
+        </div><div style="height: 1px; background: #ede7db;"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span class="mono" style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: #b2403b; color: #fffdf8;">3</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">第 2 次任务</span></div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; background: #f7e4e1; color: #8f312d; font-weight: 500;">失败 · 1 张失败牌</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 34px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 1 · 队长 <span class="mono">P3</span> · 队伍 <span class="mono">P1 P3 P5</span></span>
+                <span class="mono" style="color: #6b6357;">2 : 3 否决</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P5</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 2 · 队长 <span class="mono">P4</span> · 队伍 <span class="mono">P1 P2 P4</span></span>
+                <span class="mono" style="color: #6b6357;">2 : 3 否决</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P5</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 3 · 队长 <span class="mono">P5</span> · 队伍 <span class="mono">P1 P2 P5</span></span>
+                <span class="mono" style="color: #6b6357;">4 : 1 通过</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P5</span></div>
+            </div><div style="font-size: 12px; color: #4a443b; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span style="color: #6b6357;">任务牌</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P1 成功</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #b2403b; color: #fffdf8; font-weight: 500;">P2 失败</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P5 成功</span></div></div>
+        </div><div style="height: 1px; background: #ede7db;"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span class="mono" style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">2</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">第 3 次任务</span></div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; background: #e4ecf7; color: #24518a; font-weight: 500;">成功</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 34px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 1 · 队长 <span class="mono">P1</span> · 队伍 <span class="mono">P1 P3</span></span>
+                <span class="mono" style="color: #6b6357;">3 : 2 通过</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P5</span></div>
+            </div><div style="font-size: 12px; color: #4a443b; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span style="color: #6b6357;">任务牌</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P1 成功</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P3 成功</span></div></div>
+        </div><div style="height: 1px; background: #ede7db;"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;"><span class="mono" style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: #2f66ad; color: #fffdf8;">3</span><span class="serif" style="font-size: 15px; font-weight: 700; color: #211d18;">第 4 次任务</span></div>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; background: #e4ecf7; color: #24518a; font-weight: 500;">成功</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 34px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 1 · 队长 <span class="mono">P2</span> · 队伍 <span class="mono">P1 P2 P4</span></span>
+                <span class="mono" style="color: #6b6357;">2 : 3 否决</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P5</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #4a443b;">
+                <span>提案 2 · 队长 <span class="mono">P3</span> · 队伍 <span class="mono">P1 P3 P5</span></span>
+                <span class="mono" style="color: #6b6357;">3 : 2 通过</span>
+              </div>
+              <div style="display: flex; gap: 4px;"><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P1</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P2</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P3</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; border: 1px solid #211d18; color: #211d18;">P4</span><span class="mono" style="width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box; background: #211d18; color: #fffdf8;">P5</span></div>
+            </div><div style="font-size: 12px; color: #4a443b; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span style="color: #6b6357;">任务牌</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P1 成功</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P3 成功</span><span class="mono" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #e4ecf7; color: #24518a;">P5 成功</span></div></div>
+        </div>
+      </div>
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">模型调用</span>
+          <span class="mono" style="font-size: 12px; color: #6b6357;">89 次</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 88px minmax(0, 1fr); row-gap: 8px; column-gap: 12px; font-size: 13px;"><span style="color: #6b6357;">输入</span><span style="color: #211d18;"><span class="mono">38.1 万 token</span><span style="color: #9a9184;"> · 缓存命中 88%</span></span><span style="color: #6b6357;">输出</span><span style="color: #211d18;"><span class="mono">16,930 token</span></span><span style="color: #6b6357;">延迟</span><span style="color: #211d18;"><span class="mono">平均 6.4 秒</span></span><span style="color: #6b6357;">无效回复</span><span style="color: #211d18;">2 次<span style="color: #9a9184;"> · 兜底 0 次</span></span><span style="color: #6b6357;">费用</span><span style="color: #211d18;"><span class="mono">0.104 元</span><span style="color: #9a9184;"> · 空闲时段价</span></span></div>
+        <div style="display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid #ede7db; font-size: 12px; flex-wrap: wrap;"><a href="#">查看裁判日志</a><a href="#">查看某位玩家的完整线程</a></div>
+      </div></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

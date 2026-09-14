@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Long+Cang&display=swap">
+  <style>
+    body { margin: 0; background: #1c1c22; color: #cfcbc2; font-family: "Long Cang", "PingFang SC", "Hiragino Sans GB", cursive, sans-serif; font-size: 15px; line-height: 1.4; }
+    a { color: #9fb7dc; } a:hover { color: #c3d3ea; }
+  </style>
+</helmet>
+<div style="width: 720px; height: 450px; box-sizing: border-box; background: #1c1c22; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; border: 1px dashed #5a5a66; border-radius: 3px; padding: 6px 10px; font-size: 14px; color: #a7a39a;">
+    <span>顶栏：局号 · 模型 · 第 3 次任务 讨论中</span>
+    <span>用时 · 费用 · 回放 ◁ ▷</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 190px minmax(0, 1fr) 160px; gap: 10px; flex: 1; min-height: 0;">
+    <div style="border: 1px dashed #5a5a66; border-radius: 3px; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #a7a39a;">
+      <span style="color: #cfcbc2;">本轮发言流</span>
+      <div style="height: 34px; border: 1px dashed #44444e; border-radius: 3px; padding: 3px 6px; font-size: 12px;">P1 忠臣 · 队长 …</div>
+      <div style="height: 34px; border: 1px dashed #44444e; border-radius: 3px; padding: 3px 6px; font-size: 12px;">P2 莫甘娜 …</div>
+      <div style="height: 34px; border: 1px dashed #44444e; border-radius: 3px; padding: 3px 6px; font-size: 12px;">P3 梅林 …</div>
+      <div style="height: 34px; border: 1px dashed #7a6b3a; border-radius: 3px; padding: 3px 6px; font-size: 12px; color: #d9c27a;">P4 刺客 · 正在生成</div>
+      <div style="height: 34px; border: 1px dashed #44444e; border-radius: 3px; padding: 3px 6px; font-size: 12px; color: #6e6a62;">P5 派西维尔 · 等待</div>
+      <span style="font-size: 12px; color: #6e6a62;">点某人可展开私下分析</span>
+    </div>
+    <div style="position: relative; border: 1px dashed #5a5a66; border-radius: 3px;">
+      <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 6px; align-items: center;">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #4d79b8; display: inline-block;"></span>
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #b4544f; display: inline-block;"></span>
+        <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #cfcbc2; box-sizing: border-box; display: inline-block;"></span>
+        <span style="width: 22px; height: 22px; border-radius: 50%; border: 1px dashed #5a5a66; box-sizing: border-box; display: inline-block;"></span>
+        <span style="width: 22px; height: 22px; border-radius: 50%; border: 1px dashed #5a5a66; box-sizing: border-box; display: inline-block;"></span>
+      </div>
+      <div style="position: absolute; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); font-size: 12px; color: #6e6a62; white-space: nowrap;">任务轨 · 否决 0/5</div>
+      <div style="position: absolute; left: calc(50% - 28px); top: 10px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #4d79b8; display: flex; align-items: center; justify-content: center; font-size: 13px; text-align: center; line-height: 1.1; color: #cfcbc2;">P1<br>忠臣</div>
+      <div style="position: absolute; left: calc(50% + 62px); top: 62px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #b4544f; display: flex; align-items: center; justify-content: center; font-size: 13px; text-align: center; line-height: 1.1; color: #cfcbc2;">P2<br>莫甘娜</div>
+      <div style="position: absolute; left: calc(50% + 28px); top: 176px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #4d79b8; display: flex; align-items: center; justify-content: center; font-size: 13px; text-align: center; line-height: 1.1; color: #cfcbc2;">P3<br>梅林</div>
+      <div style="position: absolute; left: calc(50% - 84px); top: 176px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #b4544f; background: #33262a; display: flex; align-items: center; justify-content: center; font-size: 13px; text-align: center; line-height: 1.1; color: #f0e6cf;">P4<br>刺客</div>
+      <div style="position: absolute; left: calc(50% - 118px); top: 62px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #4d79b8; display: flex; align-items: center; justify-content: center; font-size: 13px; text-align: center; line-height: 1.1; color: #cfcbc2;">P5<br>派西维尔</div>
+      <div style="position: absolute; left: calc(50% - 40px); top: 4px; font-size: 11px; color: #d9c27a;">队长</div>
+      <div style="position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: #6e6a62;">座位环：颜色 = 阵营，亮起 = 正在行动</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="flex: 1; border: 1px dashed #5a5a66; border-radius: 3px; padding: 8px 10px; font-size: 14px; color: #a7a39a; display: flex; flex-direction: column; gap: 6px;">
+        <span style="color: #cfcbc2;">任务记录</span>
+        <span style="font-size: 12px;">1 · 成功 · 3:2</span>
+        <span style="font-size: 12px;">2 · 失败 · 三次提案</span>
+        <span style="font-size: 12px; color: #6e6a62;">3 · 进行中</span>
+      </div>
+      <div style="height: 92px; border: 1px dashed #5a5a66; border-radius: 3px; padding: 8px 10px; font-size: 14px; color: #a7a39a; display: flex; flex-direction: column; gap: 4px;">
+        <span style="color: #cfcbc2;">调用统计</span>
+        <span style="font-size: 12px;">token · 延迟 · 费用</span>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-size: 13px; color: #a7a39a; border-top: 1px dashed #44444e; padding-top: 8px;">
+    <span><span style="color: #f0e6cf; font-size: 16px;">方向 B · 深色监控台</span>　座位环居中，一眼看清谁在行动；适合投屏、长时间盯盘。</span>
+    <span style="color: #6e6a62; white-space: nowrap;">代价：长段中文在深底上读起来更累。</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

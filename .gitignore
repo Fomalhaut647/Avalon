@@ -14,3 +14,6 @@ games/
 
 # macOS
 .DS_Store
+
+# 本地工具配置
+.claude/

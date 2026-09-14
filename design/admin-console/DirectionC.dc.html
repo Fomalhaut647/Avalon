@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Long+Cang&display=swap">
+  <style>
+    body { margin: 0; background: #f7f5f0; color: #3b3730; font-family: "Long Cang", "PingFang SC", "Hiragino Sans GB", cursive, sans-serif; font-size: 15px; line-height: 1.4; }
+    a { color: #2f66ad; } a:hover { color: #24518a; }
+  </style>
+</helmet>
+<div style="width: 720px; height: 450px; box-sizing: border-box; background: #f7f5f0; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; border: 1px dashed #b8b0a2; border-radius: 3px; padding: 6px 10px; font-size: 14px; color: #6b6357;">
+    <span>计分条（常驻）：任务 <span style="color: #2f66ad;">●</span><span style="color: #b2403b;">●</span>◎○○ · 否决 0/5 · 好人 1 : 邪恶 1</span>
+    <span>第 3 次任务 · 讨论中 · 回放 ◁ ▷</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 10px; flex: 1; min-height: 0;">
+    <div style="border: 1px dashed #b8b0a2; border-radius: 3px; padding: 8px 10px; display: flex; flex-direction: column; gap: 9px; font-size: 13px; color: #6b6357;">
+      <span style="color: #3b3730; font-size: 14px;">座位</span>
+      <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #2f66ad; margin-right: 6px;"></span>P1 忠臣 · 队长</span>
+      <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #b2403b; margin-right: 6px;"></span>P2 莫甘娜</span>
+      <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #2f66ad; margin-right: 6px;"></span>P3 梅林</span>
+      <span style="color: #3b3730;"><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #b2403b; margin-right: 6px;"></span>P4 刺客 ← 行动中</span>
+      <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #2f66ad; margin-right: 6px;"></span>P5 派西维尔</span>
+      <span style="font-size: 12px; color: #9a9184; margin-top: auto;">点座位 = 只看这个人的事件</span>
+    </div>
+    <div style="border: 1px dashed #b8b0a2; border-radius: 3px; padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: #6b6357; overflow: hidden;">
+      <span style="color: #3b3730; font-size: 14px;">全局事件流（自上而下，像读聊天记录）</span>
+      <span style="color: #9a9184;">10:32:05　第 1 次任务开始，随机队长 P2</span>
+      <span>10:32:11　<span style="color: #b2403b;">P2</span> 发言 ……　<span style="color: #9a9184;">▸ 私下分析</span></span>
+      <span>10:32:19　<span style="color: #2f66ad;">P3</span> 发言 ……　<span style="color: #9a9184;">▸ 私下分析</span></span>
+      <span style="color: #9a9184;">　　……</span>
+      <span>10:33:02　P2 提案 P2 P5 → 投票 3:2 通过</span>
+      <span>10:33:20　任务牌 <span style="color: #2f66ad;">成功 成功</span> → <span style="color: #2f66ad;">第 1 次任务成功</span></span>
+      <span style="color: #9a9184;">10:33:21　第 2 次任务开始，队长轮到 P3</span>
+      <span style="color: #9a9184;">　　……三次提案……</span>
+      <span>10:35:30　任务牌 成功 <span style="color: #b2403b;">失败（P2）</span> 成功 → <span style="color: #b2403b;">第 2 次任务失败</span></span>
+      <span style="color: #9a9184;">10:35:31　第 3 次任务开始，队长轮到 P1</span>
+      <span>10:35:38　<span style="color: #2f66ad;">P1</span> 发言 ……　<span style="color: #9a9184;">▾ 私下分析已展开</span></span>
+      <span style="border: 1px dashed #d5cebf; border-radius: 3px; padding: 4px 8px; font-size: 12px; color: #9a9184;">私下分析正文……</span>
+      <span style="color: #3b3730; border-top: 1px dashed #b8b0a2; padding-top: 4px;">10:35:59　<span style="color: #b2403b;">P4</span> 正在生成 ……　◀ 现在</span>
+    </div>
+  </div>
+  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-size: 13px; color: #6b6357; border-top: 1px dashed #d5cebf; padding-top: 8px;">
+    <span><span style="color: #211d18; font-size: 16px;">方向 C · 日志流</span>　整局一条时间线，复盘和回放最顺手；实现也最简单。</span>
+    <span style="color: #9a9184; white-space: nowrap;">代价：全局态势只剩顶部一行计分条。</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

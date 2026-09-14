@@ -102,7 +102,7 @@ v1 的做法：公开记录全程完整保留，玩家的私下分析随其对�
 
 ### 3.3 工程
 
-- GUI 或网页观战界面。
+- 网页界面。管理员界面（裁判席）已有设计稿，见 [admin-console-design.md](admin-console-design.md) 与 [decisions/0008](decisions/0008-admin-console-first.md)；玩家界面暂缓。
 - 网络服务、数据库。
 - 批量自动对局与统计：胜率、刺杀命中率、各身份表现。`events.jsonl` 已为此预留。
 - 从落盘状态恢复中断的一局。

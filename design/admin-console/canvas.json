@@ -1,0 +1,22 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "画面流程" },
+    { "id": "page-2", "name": "备选方向（未采用）" }
+  ],
+  "artboards": [
+    { "file": "Lobby.dc.html", "x": 0, "y": 0, "w": 1440, "h": 760, "title": "0 · 对局列表与新开一局", "page": "page-1" },
+    { "file": "Main.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 1200, "title": "1 · 讨论阶段（实时跟随）", "page": "page-1" },
+    { "file": "Voting.dc.html", "x": 3120, "y": 0, "w": 1440, "h": 1200, "title": "2 · 提案与投票（五人并行投票中）", "page": "page-1" },
+    { "file": "QuestResult.dc.html", "x": 0, "y": 1340, "w": 1440, "h": 1200, "title": "3 · 任务执行与结算（回放第 2 次任务）", "page": "page-1" },
+    { "file": "Assassination.dc.html", "x": 1560, "y": 1340, "w": 1440, "h": 1400, "title": "4 · 刺杀阶段", "page": "page-1" },
+    { "file": "GameOver.dc.html", "x": 3120, "y": 1340, "w": 1440, "h": 1640, "title": "5 · 终局与角色公布", "page": "page-1" },
+    { "file": "PlayerThread.dc.html", "x": 0, "y": 3120, "w": 1440, "h": 1900, "title": "6 · 单个玩家的完整线程（从裁判席下钻）", "page": "page-1" },
+    { "file": "DirectionB.dc.html", "x": 0, "y": 0, "w": 720, "h": 450, "title": "方向 B · 深色监控台（低保真）", "page": "page-2" },
+    { "file": "DirectionC.dc.html", "x": 820, "y": 0, "w": 720, "h": 450, "title": "方向 C · 日志流（低保真）", "page": "page-2" }
+  ],
+  "annotations": [
+    { "id": "flow-note", "x": 0, "y": -170, "w": 720, "text": "阅读顺序：0 对局列表 → 1 讨论 → 2 投票 → 3 执行与结算 → 4 刺杀 → 5 终局；6 是从裁判席任一处点玩家名字下钻的线程页。\n\n七块画面是同一局假想对局（种子 42）：第 2 次任务 P2 打出失败牌，好人 3 : 1 赢下任务，刺客 P4 刺中梅林 P3。画面 3 演示回放：把进度拖回事件 31 看第 2 次任务的出牌。", "page": "page-1" },
+    { "id": "alt-note", "x": 0, "y": -120, "w": 520, "text": "主方向已定为暖纸账簿（见「画面流程」页）。这两块低保真草图保留作对照，不再推进。", "page": "page-2" }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

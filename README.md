@@ -9,6 +9,7 @@
 - [docs/decisions/](docs/decisions/)：设计决策记录，回答"为什么这样做"
 - [docs/roadmap.md](docs/roadmap.md)：v1 刻意不做、日后可能做的方向
 - [docs/experiments.md](docs/experiments.md)：真实模型对局的记录与观察
+- [docs/admin-console-design.md](docs/admin-console-design.md)：管理员网页界面的设计稿说明与画布链接
 - [docs/archive/](docs/archive/)：最初的需求文档，仅历史参考
 
 ## 运行
@@ -35,4 +36,4 @@ uv run avalon --random-players --seed 1
 
 ## 状态
 
-v1 已完成：规则、裁判状态机、DeepSeek 玩家、落盘与复盘稿均已实现，测试全部不联网。后续方向见 [docs/roadmap.md](docs/roadmap.md)。
+v1 已完成：规则、裁判状态机、DeepSeek 玩家、落盘与复盘稿均已实现，测试全部不联网。管理员网页界面已有设计稿，尚未开发。后续方向见 [docs/roadmap.md](docs/roadmap.md)。

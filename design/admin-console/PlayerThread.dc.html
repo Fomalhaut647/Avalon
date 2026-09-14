@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #f4f0e8; color: #211d18; font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: #2f66ad; text-decoration: none; } a:hover { color: #24518a; text-decoration: underline; }
+    .serif { font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .pulse { animation: pulse 1.6s ease-in-out infinite; }
+    @keyframes shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+    .skeleton { background: linear-gradient(90deg, #e9e3d7 0%, #f6f2ea 50%, #e9e3d7 100%); background-size: 600px 100%; animation: shimmer 1.8s linear infinite; border-radius: 3px; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1900px; background: #f4f0e8; display: flex; flex-direction: column; box-sizing: border-box;">
+
+  <div style="height: 60px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: #fffdf8; border-bottom: 1px solid #e2dbcd;">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="color: #9a9184; display: inline-flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M11 18l-6-6 6-6"></path></svg></span>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b6357;"><span>对局列表</span><span style="color: #9a9184;">/</span><span class="mono">20260914-1032-7f3a</span><span style="color: #9a9184;">/</span><span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">P2 · 莫甘娜 的完整线程</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span class="mono" style="font-size: 12px; padding: 3px 9px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">P1</span><span class="mono" style="font-size: 12px; padding: 3px 9px; border-radius: 4px; background: #211d18; color: #fffdf8;">P2</span><span class="mono" style="font-size: 12px; padding: 3px 9px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">P3</span><span class="mono" style="font-size: 12px; padding: 3px 9px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">P4</span><span class="mono" style="font-size: 12px; padding: 3px 9px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">P5</span>
+      </div>
+      <span style="width: 1px; height: 18px; background: #e2dbcd;"></span>
+      <span class="mono" style="font-size: 12px; color: #6b6357;">25 条消息 · 12 次调用 · 线程 1.62 万 token</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid #211d18; color: #211d18; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"></path><path d="M7 10l5 5 5-5"></path><path d="M4 19h16"></path></svg>导出 P2.json</span>
+    </div>
+  </div>
+  <div style="box-sizing: border-box; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: #faf7f1; border-bottom: 1px solid #e2dbcd;">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div class="mono" style="width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; border: 2px solid #b2403b; background: #f7e4e1; color: #8f312d; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0;">P2</div>
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="display: flex; align-items: center; gap: 8px;"><span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">P2 · 莫甘娜</span><span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f7e4e1; color: #8f312d; font-weight: 500;">邪恶</span><span style="font-size: 12px; color: #6b6357; display: inline-flex; align-items: center; gap: 5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9184" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>队友 P4</span></div>
+        <span style="font-size: 12px; color: #9a9184;">每条裁判通知只包含它自己尚未看过的公开事件；这条线程从开局起从未清空，可见的私下分析是它唯一的跨轮记忆。</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #211d18; color: #fffdf8; font-weight: 500;">全部</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">只看回复</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2dbcd; color: #6b6357;">只看私下分析</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2dbcd; color: #9a9184;">隐藏推理 · 本局关闭</span>
+    </div>
+  </div>
+  <div style="box-sizing: border-box; padding: 20px 24px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; align-items: start;">
+    <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px 8px; box-sizing: border-box;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <div style="display: flex; align-items: baseline; gap: 12px;"><span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">消息线程</span><span style="font-size: 12px; color: #6b6357;">发给 API 的 messages 原样展示，顺序即发送顺序</span></div>
+          <span class="mono" style="font-size: 12px; color: #6b6357;">25 条</span>
+        </div>
+        <div style="">
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#0</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f6ecd2; color: #8a6418; font-weight: 500;">系统</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">系统提示 · 规则、身份与格式</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">1,180 token · 只发一次</span>
+            </div>
+            <div style="font-size: 13px; color: #4a443b; line-height: 1.7;">你是一局五人阿瓦隆中的玩家 P2……角色：莫甘娜（Morgana），邪恶阵营。你知道的额外信息：你的邪恶队友是 P4……回复必须依次包含【私下分析】【公开发言】……</div><span style="display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: #9a9184;">展开全文<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#1</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #e2dbcd; color: #6b6357; font-weight: 500;">裁判通知</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">第 1 次任务 · 请发言</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">10:32:05 · 412 token</span>
+            </div>
+            <div class="mono" style="font-size: 12px; line-height: 1.7; color: #4a443b; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 10px 12px; white-space: normal;"># 公开事件<br>第 1 次任务开始，需要 2 人。裁判随机指定第一任队长为 P2。<br><br># 计分板<br>当前：第 1 次任务（2 人），第 1 次提案，队长 P2，本次任务已否决 0 次<br>比分：好人 0 胜，邪恶 0 胜（先到 3 胜）<br><br># 你的行动<br>轮到你发言。请先写【私下分析】，再写【公开发言】（不超过 200 字）。</div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#2</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f7e4e1; color: #8f312d; font-weight: 500;">P2 回复</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">回复 · 发言</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">6.2 秒 · 输出 398 token · 缓存命中 0</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;"><div style="display: flex; flex-direction: column; gap: 4px; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 8px 12px;"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6357; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>【私下分析】<span style="color: #9a9184; font-weight: 400;">· 未进入任何人的公开事件</span></span><span style="font-size: 13px; color: #4a443b; line-height: 1.7;">我是莫甘娜，队友是 P4。我是第一任队长，可以直接把自己放进两人队伍，再带一个好人当掩护。P4 不能带，两个坏人同队太容易暴露。带 P5 比较自然，它坐在我旁边。第一次任务我先打成功牌换信任。</span></div><div style="display: flex; flex-direction: column; gap: 4px; padding: 0 12px;"><span style="font-size: 12px; color: #6b6357; font-weight: 500;">【公开发言】</span><span style="font-size: 13px; color: #211d18; line-height: 1.7;">第一轮没有任何信息，我作为队长打算带自己和 P5，两人队伍风险最小。大家看牌面说话，如果这轮成功，说明我们两个都可信。</span></div></div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#3</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #e2dbcd; color: #6b6357; font-weight: 500;">裁判通知</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">第 1 次任务 · 请提出队伍</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">10:33:00 · 266 token</span>
+            </div>
+            <div class="mono" style="font-size: 12px; line-height: 1.7; color: #4a443b; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 10px 12px; white-space: normal;"># 公开事件<br>P3 发言：……<br>P4 发言：……<br>P5 发言：……<br>P1 发言：……<br><br># 你的行动<br>你是队长，请从 P1、P2、P3、P4、P5 中选出 2 人组成队伍，写在【队伍】后。</div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#4</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f7e4e1; color: #8f312d; font-weight: 500;">P2 回复</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">回复 · 提案</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">4.4 秒 · 输出 176 token · 缓存命中 1,984</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;"><div style="display: flex; flex-direction: column; gap: 4px; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 8px 12px;"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6357; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>【私下分析】<span style="color: #9a9184; font-weight: 400;">· 未进入任何人的公开事件</span></span><span style="font-size: 13px; color: #4a443b; line-height: 1.7;">按计划带自己和 P5。P3 发言时对我略有怀疑，之后要留意它。</span></div><div style="display: flex; flex-direction: column; gap: 4px; padding: 0 12px;"><span style="font-size: 12px; color: #6b6357; font-weight: 500;">【队伍】</span><span style="font-size: 13px; color: #211d18; line-height: 1.7;">P2、P5</span></div></div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ede7db;">
+          <span style="flex: 1; height: 1px; background: #e2dbcd;"></span>
+          <span style="font-size: 12px; color: #9a9184; display: inline-flex; align-items: center; gap: 4px;">中间 18 条消息已折叠 · 第 1 次任务投票与出牌、第 2 次任务三次提案<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          <span style="flex: 1; height: 1px; background: #e2dbcd;"></span>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid #ede7db;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#23</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #e2dbcd; color: #6b6357; font-weight: 500;">裁判通知</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">第 3 次任务 · 请发言</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">10:35:44 · 588 token</span>
+            </div>
+            <div class="mono" style="font-size: 12px; line-height: 1.7; color: #4a443b; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 10px 12px; white-space: normal;"># 公开事件<br>第 2 次任务结果：失败，3 张任务牌中有 1 张失败。<br>比分：好人 1 胜，邪恶 1 胜。<br>第 3 次任务开始，需要 2 人。队长轮转到 P1。<br>P1 发言：第 2 次任务只出了一张失败牌，队里 P1、P2、P5 三人中至少有一名坏人……<br><br># 计分板<br>当前：第 3 次任务（2 人），第 1 次提案，队长 P1，本次任务已否决 0 次<br>……<br><br># 你的行动<br>轮到你发言。请先写【私下分析】，再写【公开发言】（不超过 200 字）。</div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 14px 0;">
+          <span class="mono" style="font-size: 11px; color: #9a9184; padding-top: 3px;">#24</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f7e4e1; color: #8f312d; font-weight: 500;">P2 回复</span><span style="font-size: 13px; color: #211d18; font-weight: 500;">回复 · 发言</span></div>
+              <span class="mono" style="font-size: 11px; color: #9a9184; white-space: nowrap;">7.4 秒 · 输出 402 token · 缓存命中 14,592</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;"><div style="display: flex; flex-direction: column; gap: 4px; background: #f4f0e8; border: 1px solid #e2dbcd; border-radius: 4px; padding: 8px 12px;"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6357; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>【私下分析】<span style="color: #9a9184; font-weight: 400;">· 未进入任何人的公开事件</span></span><span style="font-size: 13px; color: #4a443b; line-height: 1.7;">第 2 次任务的失败牌是我打的，现在必须把嫌疑引到 P5 身上。P3 连续反对含我的队伍，很可能是梅林，之后要提醒 P4。本轮绝不能让 P1 带 P3，否则好人再赢一次就进入刺杀阶段。</span></div><div style="display: flex; flex-direction: column; gap: 4px; padding: 0 12px;"><span style="font-size: 12px; color: #6b6357; font-weight: 500;">【公开发言】</span><span style="font-size: 13px; color: #211d18; line-height: 1.7;">P1 的推理漏了一点：第 2 次任务的队伍是 P5 提的，我只是被带上。如果我是坏人，第 1 次任务为什么打成功？两次都在队里的是 P5，我建议 P1 带 P5 验一验。</span></div></div>
+          </div>
+        </div></div>
+      </div></div>
+    <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">调用明细</span>
+          <span class="mono" style="font-size: 12px; color: #6b6357;">12 次 · 0.0178 元</span>
+        </div>
+        <div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #9a9184; padding-bottom: 4px;"><span>#</span><span>行动</span><span>延迟</span><span>输入 命中 / 未命中</span><span>输出</span><span>费用 元</span></div>
+        <div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">1</span><span style="font-family: inherit;">发言</span><span>6.2 秒</span><span>1,592 / 0</span><span>398</span><span>0.0032</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">2</span><span style="font-family: inherit;">提案</span><span>4.4 秒</span><span>1,984 / 284</span><span>176</span><span>0.0010</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">3</span><span style="font-family: inherit;">投票</span><span>3.8 秒</span><span>2,304 / 112</span><span>131</span><span>0.0007</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">4</span><span style="font-family: inherit;">出牌</span><span>4.1 秒</span><span>2,496 / 96</span><span>142</span><span>0.0007</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">5</span><span style="font-family: inherit;">发言</span><span>6.9 秒</span><span>2,688 / 604</span><span>411</span><span>0.0023</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">6</span><span style="font-family: inherit;">投票</span><span>3.5 秒</span><span>3,776 / 88</span><span>124</span><span>0.0006</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">7</span><span style="font-family: inherit;">发言</span><span>7.1 秒</span><span>3,904 / 512</span><span>377</span><span>0.0020</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">8</span><span style="font-family: inherit;">投票</span><span>4.0 秒</span><span>4,864 / 92</span><span>138</span><span>0.0007</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">9</span><span style="font-family: inherit;">发言</span><span>6.4 秒</span><span>5,056 / 476</span><span>366</span><span>0.0020</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">10</span><span style="font-family: inherit;">投票</span><span>3.7 秒</span><span>5,952 / 90</span><span>129</span><span>0.0006</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">11</span><span style="font-family: inherit;">出牌</span><span>6.9 秒</span><span>6,144 / 118</span><span>344</span><span>0.0015</span></div><div class="mono" style="display: grid; grid-template-columns: 28px 44px 52px minmax(0, 1fr) 56px 64px; gap: 8px; font-size: 11px; color: #4a443b; padding: 5px 0; border-bottom: 1px solid #ede7db;"><span style="color: #9a9184;">12</span><span style="font-family: inherit;">发言</span><span>7.4 秒</span><span>14,592 / 588</span><span>402</span><span>0.0025</span></div>
+        <div style="font-size: 12px; color: #9a9184; line-height: 1.6; padding-top: 4px;">输入里的"命中"是前缀缓存命中的 token，只按十分之一以下计价。线程越长，命中占比越高。</div>
+      </div>
+      <div style="background: #fffdf8; border: 1px solid #e2dbcd; border-radius: 6px; padding: 18px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #e2dbcd;">
+          <span class="serif" style="font-size: 17px; font-weight: 700; color: #211d18;">线程规模</span>
+          <span class="mono" style="font-size: 12px; color: #6b6357;">至第 25 条</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 88px minmax(0, 1fr); row-gap: 8px; column-gap: 12px; font-size: 13px;"><span style="color: #6b6357;">系统提示</span><span style="color: #211d18;"><span class="mono">1,180 token</span></span><span style="color: #6b6357;">累计输入</span><span style="color: #211d18;"><span class="mono">55.4 万 token</span><span style="color: #9a9184;"> · 命中 91%</span></span><span style="color: #6b6357;">累计输出</span><span style="color: #211d18;"><span class="mono">3,138 token</span></span><span style="color: #6b6357;">最新一次</span><span style="color: #211d18;"><span class="mono">15,180 token</span><span style="color: #9a9184;"> · 约占上下文窗口 12%</span></span><span style="color: #6b6357;">私下分析</span><span style="color: #211d18;">12 段<span style="color: #9a9184;"> · 均未外泄</span></span></div>
+        <div style="display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid #ede7db; font-size: 12px; flex-wrap: wrap;"><a href="#">查看 P2 收到的每条通知的公开事件游标</a><a href="#">在裁判日志中定位</a></div>
+      </div></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
