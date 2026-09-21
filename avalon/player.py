@@ -2,17 +2,24 @@
 
 Player 是裁判与外界之间唯一的接缝：给一份 Notice，收回一个 Reply。
 - LLMPlayer：维护整局的对话线程，调用 llm，解析两段式回复。
-- RandomPlayer：随机给出合法答案，供状态机测试，不联网。
+- RandomPlayer：随机给出合法答案，供状态机测试与不联网演示；可模拟思考延迟。
+
+掐断：裁判在每次调用前给玩家换一个新的 cancel_event，需要掐断时调用 cancel()。
+被掐断的调用抛 CallCancelled，玩家线程回滚到发通知之前，如同这次通知从未发出。
 """
 
 from __future__ import annotations
 
 import random
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
+from avalon.config import Config
+from avalon.control import CallCancelled
 from avalon.llm import LLMClient, LLMResult
+from avalon.rules import PLAYER_IDS
 
 
 class Action(str, Enum):
@@ -67,6 +74,8 @@ class Player(ABC):
         self.messages: list[dict[str, str]] = []
         """对话线程。非 LLM 玩家保持为空。"""
         self._calls: list[LLMResult] = []
+        self.cancel_event = threading.Event()
+        """当前这次调用的掐断信号。裁判在每次调用前换一个新的。"""
 
     @abstractmethod
     def brief(self, system_prompt: str) -> None:
@@ -74,7 +83,11 @@ class Player(ABC):
 
     @abstractmethod
     def act(self, notice: Notice) -> Reply:
-        """收到通知，返回答案。格式不合法时抛 InvalidReply。"""
+        """收到通知，返回答案。格式不合法时抛 InvalidReply；被掐断时抛 CallCancelled。"""
+
+    def cancel(self) -> None:
+        """掐断进行中的调用。"""
+        self.cancel_event.set()
 
     def drain_calls(self) -> list[LLMResult]:
         """取走自上次取走以来的 API 调用记录，供裁判记日志。"""
@@ -83,7 +96,7 @@ class Player(ABC):
 
 
 class LLMPlayer(Player):
-    """一条持续整局的对话线程。messages 只增不删。"""
+    """一条持续整局的对话线程。messages 只增不删；唯一的例外是被掐断的通知会被撤回。"""
 
     def __init__(self, player_id: str, client: LLMClient) -> None:
         super().__init__(player_id)
@@ -97,7 +110,11 @@ class LLMPlayer(Player):
         from avalon import prompts
 
         self.messages.append({"role": "user", "content": prompts.render_notice(notice)})
-        result = self.client.complete(self.messages)
+        try:
+            result = self.client.complete(self.messages, cancel=self.cancel_event)
+        except CallCancelled:
+            self.messages.pop()
+            raise
         self._calls.append(result)
         self.messages.append({"role": "assistant", "content": result.text})
         try:
@@ -107,16 +124,19 @@ class LLMPlayer(Player):
 
 
 class RandomPlayer(Player):
-    """随机合法答案。给定 rng 可复现。"""
+    """随机合法答案。给定 rng 可复现；delay_s > 0 时每次行动先"思考"这么多秒，可被掐断。"""
 
-    def __init__(self, player_id: str, rng: random.Random) -> None:
+    def __init__(self, player_id: str, rng: random.Random, delay_s: float = 0.0) -> None:
         super().__init__(player_id)
         self.rng = rng
+        self.delay_s = delay_s
 
     def brief(self, system_prompt: str) -> None:
         pass
 
     def act(self, notice: Notice) -> Reply:
+        if self.delay_s > 0 and self.cancel_event.wait(self.delay_s):
+            raise CallCancelled()
         pid = self.player_id
         if notice.action == Action.SPEAK:
             return Reply(private_analysis="", public_speech=f"{pid} 的随机发言。")
@@ -130,3 +150,21 @@ class RandomPlayer(Player):
         if notice.action == Action.ASSASSINATE:
             return Reply(private_analysis="", target=self.rng.choice(notice.candidates))
         raise ValueError(f"未知行动 {notice.action}")
+
+
+def build_players(config: Config, rng: random.Random, random_players: bool, random_delay_s: float = 0.0) -> dict[str, Player]:
+    """按配置装配五个座位：真实模型玩家，或不联网的随机玩家。"""
+    players: dict[str, Player] = {}
+    for pid in PLAYER_IDS:
+        if random_players:
+            players[pid] = RandomPlayer(pid, random.Random(rng.randrange(2**31)), delay_s=random_delay_s)
+        else:
+            client = LLMClient(
+                config.api_key,
+                config.base_url,
+                config.seat_models[pid],
+                timeout_s=config.timeout_s,
+                thinking=config.thinking,
+            )
+            players[pid] = LLMPlayer(pid, client)
+    return players

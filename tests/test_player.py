@@ -12,7 +12,7 @@ class FakeClient:
         self.replies = list(replies)
         self.seen: list[list[dict[str, str]]] = []
 
-    def complete(self, messages):
+    def complete(self, messages, *, cancel=None):
         self.seen.append([dict(m) for m in messages])
         return LLMResult(text=self.replies.pop(0), prompt_tokens=10, completion_tokens=5, latency_s=0.1, reasoning="隐藏推理")
 

@@ -5,8 +5,10 @@ description = "五个 AI 玩家对局的阿瓦隆：非 AI 裁判状态机 + 5 �
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.141.1",
     "openai>=1.0",
     "python-dotenv>=1.0",
+    "uvicorn>=0.53.0",
 ]
 
 [project.scripts]
@@ -14,6 +16,7 @@ avalon = "avalon.__main__:main"
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=8",
 ]
 

@@ -7,12 +7,15 @@
 from __future__ import annotations
 
 import random
+import threading
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from avalon import prompts, rules
 from avalon.config import Config, estimate_cost_cny
+from avalon.control import CallCancelled, GameControl
 from avalon.player import Action, InvalidReply, Notice, Player, Reply
 from avalon.recorder import Recorder
 from avalon.rules import PLAYER_IDS, Role, Side
@@ -38,6 +41,7 @@ class Referee:
         rng: random.Random,
         on_public: Callable[[str], None] | None = None,
         on_private: Callable[[str, str, str], None] | None = None,
+        control: GameControl | None = None,
     ) -> None:
         self.players = players
         self.config = config
@@ -45,6 +49,8 @@ class Referee:
         self.rng = rng
         self.on_public = on_public
         self.on_private = on_private
+        self.control = control or GameControl()
+        """暂停与终止的开关。不传则永远放行。"""
         self.state = GameState(game_id=recorder.game_dir.name, seed=config.seed)
         self.public_log: list[PublicEvent] = []
         """全部公开事件，按时间排列。"""
@@ -295,7 +301,11 @@ class Referee:
         team_size: int | None = None,
         candidates: tuple[str, ...] = (),
     ) -> Reply:
-        """向一名玩家发通知并收答案；不合法则退回重答，连续达到上限后兜底。"""
+        """向一名玩家发通知并收答案；不合法则退回重答，连续达到上限后兜底。
+
+        每次发通知前经过 control.checkpoint()：暂停时在此等待，终止时在此抛出 GameAborted。
+        进行中的调用被掐断时记一条作废调用，回到 checkpoint，继续后原样重发同一份通知。
+        """
         player = self.players[pid]
         quest = self.state.current_quest if self.state.quests else None
         ctx = {
@@ -306,11 +316,31 @@ class Referee:
         for attempt in range(1, self.config.max_invalid_retries + 1):
             notice = self._notice(pid, action, make_instruction(), reason, team_size, candidates)
             reply: Reply | None
-            try:
-                reply = player.act(notice)
-                error = validate(reply)
-            except InvalidReply as e:
-                reply, error = None, str(e)
+            while True:
+                self.control.checkpoint()
+                self.recorder.event("ask", player=pid, action=action.value, attempt=attempt, **ctx)
+                player.cancel_event = threading.Event()
+                self.control.begin_call(pid, player.cancel)
+                started = time.monotonic()
+                try:
+                    reply = player.act(notice)
+                    error = validate(reply)
+                except InvalidReply as e:
+                    reply, error = None, str(e)
+                except CallCancelled:
+                    self.control.end_call(pid)
+                    self.recorder.event(
+                        "voided_call",
+                        player=pid,
+                        action=action.value,
+                        attempt=attempt,
+                        waited_s=round(time.monotonic() - started, 2),
+                        **ctx,
+                    )
+                    continue
+                finally:
+                    self.control.end_call(pid)
+                break
             self._record_calls(pid)
             if error is None and reply is not None:
                 self._record_turn(pid, action, reply, attempt, **ctx)

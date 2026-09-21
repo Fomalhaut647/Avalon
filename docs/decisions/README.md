@@ -21,4 +21,5 @@
 | [0006](0006-hidden-thinking-off-by-default.md) | 默认关闭模型的隐藏思考，只靠可见的私下分析 | 已被 0010 取代 |
 | [0007](0007-rotating-leader.md) | 队长按座位顺时针轮转，替代每次任务随机指定 | 已采纳 |
 | [0008](0008-admin-console-first.md) | 网页界面先做管理员界面，玩家界面暂缓 | 已采纳 |
+| [0009](0009-two-step-pause-and-web-service.md) | 裁判席可暂停、掐断、终止对局；网页服务用 SSE 推送，回放在浏览器本地切片 | 已采纳 |
 | [0010](0010-hidden-thinking-on-by-default.md) | 默认开启模型的隐藏思考，每局可单独关闭 | 已采纳 |
