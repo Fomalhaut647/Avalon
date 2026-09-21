@@ -44,8 +44,8 @@ class Config:
     parallel: bool = True
     """投票、执行任务这类逻辑上同时的行动是否并发请求。测试用假玩家时关闭以保证可复现。"""
     timeout_s: float = 120.0
-    thinking: bool = False
-    """是否开启模型的隐藏思考。关闭时模型只有可见的私下分析可用，更快更省；开启时每次行动多出数千 token 的隐藏推理。"""
+    thinking: bool = True
+    """是否开启模型的隐藏思考。默认开，见 docs/decisions/0010；关闭时模型只有可见的私下分析可用，更快更省。"""
 
     def __post_init__(self) -> None:
         if not self.seat_models:
@@ -54,6 +54,12 @@ class Config:
 
 def _truthy(value: str) -> bool:
     return value.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _thinking_from_env() -> bool:
+    """DEEPSEEK_THINKING 未设置时默认开；写 off/false/0/no 关闭。"""
+    raw = os.environ.get("DEEPSEEK_THINKING", "").strip()
+    return True if not raw else _truthy(raw)
 
 
 def load_config(seed: int, games_dir: Path | None = None, *, parallel: bool = True) -> Config:
@@ -71,5 +77,5 @@ def load_config(seed: int, games_dir: Path | None = None, *, parallel: bool = Tr
         seed=seed,
         games_dir=games_dir or Path("games"),
         parallel=parallel,
-        thinking=_truthy(os.environ.get("DEEPSEEK_THINKING", "")),
+        thinking=_thinking_from_env(),
     )
