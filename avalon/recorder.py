@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from avalon.rules import PLAYER_IDS
+from avalon.rules import player_ids
 from avalon.state import GameState, Phase
 
 
@@ -41,7 +41,7 @@ def public_view(state: GameState) -> dict[str, Any]:
         "game_id": state.game_id,
         "seed": state.seed,
         "phase": state.phase.value,
-        "players": list(PLAYER_IDS),
+        "players": list(player_ids(state.players)),
         "success_count": state.success_count,
         "fail_count": state.fail_count,
         "quests": quests,
@@ -154,10 +154,12 @@ class Recorder:
 
     def write_transcript(self, state: GameState) -> None:
         """人可读的复盘稿 transcript.md。私下分析以引用块加锁标记区分。"""
+        ids = player_ids(state.players)
         lines: list[str] = [f"# 对局 {state.game_id}", ""]
         lines.append(f"- 随机种子：{state.seed}")
+        lines.append(f"- 人数：{state.players} 人（{ids[0]} 到 {ids[-1]}）")
         if state.assignments:
-            roles = "，".join(f"{pid} = {state.assignments[pid].value}" for pid in PLAYER_IDS)
+            roles = "，".join(f"{pid} = {state.assignments[pid].value}" for pid in ids)
             lines.append(f"- 角色：{roles}")
         if state.winner:
             lines.append(f"- 结果：{state.winner.value} 获胜（{state.win_reason}）")
@@ -184,7 +186,7 @@ class Recorder:
                 lines.append("")
             elif kind == "votes":
                 votes = e["votes"]
-                parts = "，".join(f"{pid} {'赞成' if votes[pid] else '反对'}" for pid in PLAYER_IDS if pid in votes)
+                parts = "，".join(f"{pid} {'赞成' if votes[pid] else '反对'}" for pid in ids if pid in votes)
                 verdict = "通过" if e["approved"] else "否决"
                 lines += [f"**投票**：{parts} → {verdict}", ""]
             elif kind == "quest_result":

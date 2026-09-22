@@ -1,11 +1,32 @@
 // 通用小工具：转义、格式化、图标、术语。
 
-export const PIDS = ["P1", "P2", "P3", "P4", "P5"];
-export const QUEST_SIZES = [2, 3, 2, 3, 3];
 export const STEPS = ["讨论", "提案", "投票", "执行", "结算"];
 
-export const ROLE_ZH = { Merlin: "梅林", Percival: "派西维尔", "Loyal Servant": "忠臣", Morgana: "莫甘娜", Assassin: "刺客" };
-export const ROLE_SIDE = { Merlin: "good", Percival: "good", "Loyal Servant": "good", Morgana: "evil", Assassin: "evil" };
+export const MIN_PLAYERS = 5;
+export const MAX_PLAYERS = 10;
+export const DEFAULT_PLAYERS = 5;
+/** 与 rules.QUEST_SIZES_BY_COUNT 一致。事件里没有座位名单的旧局按 5 人。 */
+const QUEST_SIZES_BY_COUNT = {
+  5: [2, 3, 2, 3, 3], 6: [2, 3, 4, 3, 4], 7: [2, 3, 3, 4, 4],
+  8: [3, 4, 4, 5, 5], 9: [3, 4, 4, 5, 5], 10: [3, 4, 4, 5, 5],
+};
+export const PLAYER_CHOICES = [5, 6, 7, 8, 9, 10];
+
+export function seatIds(players = DEFAULT_PLAYERS) {
+  const n = QUEST_SIZES_BY_COUNT[players] ? players : DEFAULT_PLAYERS;
+  return Array.from({ length: n }, (_, i) => `P${i + 1}`);
+}
+export function questSizes(players = DEFAULT_PLAYERS) { return QUEST_SIZES_BY_COUNT[players] || QUEST_SIZES_BY_COUNT[DEFAULT_PLAYERS]; }
+export function votesToApprove(players = DEFAULT_PLAYERS) { return Math.floor((QUEST_SIZES_BY_COUNT[players] ? players : DEFAULT_PLAYERS) / 2) + 1; }
+/** 座位卡一行摆几张：六人以内一行排开，再多就两行。 */
+export function seatColumns(players = DEFAULT_PLAYERS) { return players <= 6 ? players : Math.ceil(players / 2); }
+
+export const ROLE_ZH = { Merlin: "梅林", Percival: "派西维尔", "Loyal Servant": "忠臣", Morgana: "莫甘娜", Assassin: "刺客", Oberon: "奥伯伦", Minion: "爪牙", Mordred: "莫德雷德" };
+export const ROLE_SIDE = { Merlin: "good", Percival: "good", "Loyal Servant": "good", Morgana: "evil", Assassin: "evil", Oberon: "evil", Minion: "evil", Mordred: "evil" };
+/** 互知的邪恶角色；奥伯伦不在其中。 */
+const KNOWN_EVIL = new Set(["Morgana", "Assassin", "Minion", "Mordred"]);
+/** 梅林看不到的邪恶角色。 */
+const UNSEEN_BY_MERLIN = new Set(["Mordred"]);
 export const ACTION_ZH = { speak: "发言", propose: "提案", vote: "投票", execute_quest: "出牌", assassinate: "刺杀" };
 export const ACTION_ING = { speak: "正在发言", propose: "正在指派队伍", vote: "投票中", execute_quest: "正在出牌", assassinate: "正在选择刺杀目标" };
 export const STATUS_ZH = {
@@ -23,17 +44,25 @@ export function roleZh(role) { return ROLE_ZH[role] || role || "?"; }
 export function sideOf(role) { return ROLE_SIDE[role] || "unknown"; }
 export function sideZh(side) { return side === "good" ? "好人" : side === "evil" ? "邪恶" : "未知"; }
 
-/** 与 rules.hidden_info_for 一致的"开局所知"。 */
-export function hiddenInfo(pid, assignments) {
+/** 与 rules.hidden_info_for 一致的"开局所知"。座位名单由调用方按本局人数给出。 */
+export function hiddenInfo(pid, assignments, pids = seatIds(Object.keys(assignments || {}).length)) {
   const role = assignments[pid];
   if (!role) return "";
-  const evil = PIDS.filter((p) => ROLE_SIDE[assignments[p]] === "evil");
-  if (role === "Merlin") return `看到 ${evil.join("、")} 是邪恶`;
+  const evil = pids.filter((p) => ROLE_SIDE[assignments[p]] === "evil");
+  if (role === "Merlin") {
+    const seen = evil.filter((p) => !UNSEEN_BY_MERLIN.has(assignments[p]));
+    const blind = evil.some((p) => UNSEEN_BY_MERLIN.has(assignments[p])) ? "，看不到莫德雷德" : "";
+    return `看到 ${seen.join("、")} 是邪恶${blind}`;
+  }
   if (role === "Percival") {
-    const pair = PIDS.filter((p) => assignments[p] === "Merlin" || assignments[p] === "Morgana");
+    const pair = pids.filter((p) => assignments[p] === "Merlin" || assignments[p] === "Morgana");
     return `看到 ${pair.join("、")} 之一是梅林`;
   }
-  if (ROLE_SIDE[role] === "evil") return `队友 ${evil.filter((p) => p !== pid).join("、")}`;
+  if (role === "Oberon") return "不知同伴，同伴也不知他";
+  if (ROLE_SIDE[role] === "evil") {
+    const fellows = evil.filter((p) => p !== pid && KNOWN_EVIL.has(assignments[p]));
+    return fellows.length ? `队友 ${fellows.join("、")}` : "不知同伴";
+  }
   return "无额外信息";
 }
 

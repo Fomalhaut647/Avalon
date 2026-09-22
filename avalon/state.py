@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from avalon.rules import Role, Side
+from avalon.rules import DEFAULT_PLAYERS, Role, Side
 
 
 class Phase(str, Enum):
@@ -66,6 +66,8 @@ class Quest:
 class GameState:
     game_id: str
     seed: int
+    players: int = DEFAULT_PLAYERS
+    """本局人数，5 到 10。座位是 P1 到 P{players}。"""
     phase: Phase = Phase.INIT
     assignments: dict[str, Role] = field(default_factory=dict)
     """私有，GAME_OVER 时公开。"""

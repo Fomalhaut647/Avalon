@@ -12,6 +12,7 @@ from avalon.prompts import (
     MARK_TEAM,
     MARK_VOTE,
 )
+from avalon import rules
 from avalon.rules import HiddenInfo, Role
 
 
@@ -93,21 +94,21 @@ def test_duplicate_private_sections_are_joined():
 
 
 def test_system_prompt_contains_identity_and_hidden_info():
-    text = prompts.system_prompt("P1", Role.MERLIN, HiddenInfo(evil_players=("P2", "P5")))
+    text = prompts.system_prompt("P1", Role.MERLIN, HiddenInfo(evil_players=("P2", "P5")), 5)
     assert "你是 P1" in text and "梅林" in text and "P2 和 P5" in text
-    text = prompts.system_prompt("P3", Role.PERCIVAL, HiddenInfo(merlin_or_morgana=("P1", "P5")))
+    text = prompts.system_prompt("P3", Role.PERCIVAL, HiddenInfo(merlin_or_morgana=("P1", "P5")), 5)
     assert "P1 和 P5" in text
-    text = prompts.system_prompt("P2", Role.ASSASSIN, HiddenInfo(fellow_evil="P5"))
+    text = prompts.system_prompt("P2", Role.ASSASSIN, HiddenInfo(fellow_evils=("P5",)), 5)
     assert "P5" in text and "莫甘娜" in text
-    text = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo())
+    text = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo(), 5)
     assert "没有任何隐藏信息" in text
 
 
 def test_system_prompt_format_section_matches_role():
     common = (MARK_PRIVATE, MARK_SPEECH, MARK_TEAM, MARK_VOTE)
-    servant = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo())
-    morgana = prompts.system_prompt("P1", Role.MORGANA, HiddenInfo(fellow_evil="P2"))
-    assassin = prompts.system_prompt("P2", Role.ASSASSIN, HiddenInfo(fellow_evil="P1"))
+    servant = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo(), 5)
+    morgana = prompts.system_prompt("P1", Role.MORGANA, HiddenInfo(fellow_evils=("P2",)), 5)
+    assassin = prompts.system_prompt("P2", Role.ASSASSIN, HiddenInfo(fellow_evils=("P1",)), 5)
     for text in (servant, morgana, assassin):
         for mark in common:
             assert mark in text
@@ -118,7 +119,81 @@ def test_system_prompt_format_section_matches_role():
 
 
 def test_system_prompt_does_not_leak_other_roles():
-    text = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo())
+    text = prompts.system_prompt("P4", Role.LOYAL_SERVANT, HiddenInfo(), 5)
     # 忠臣的 system prompt 不应包含任何具体座位的角色断言。
     for pid in ("P1", "P2", "P3", "P5"):
         assert f"{pid} 是" not in text
+
+
+# ---------------------------------------------------------------- 5 到 10 人
+
+
+def test_parse_team_reads_two_digit_seats():
+    text = f"{MARK_PRIVATE}\n分析\n{MARK_SPEECH}\n我选 P1 和 P10。\n{MARK_TEAM}P1, P10"
+    assert prompts.parse_reply(text, Action.PROPOSE).team == ("P1", "P10")
+
+
+def test_parse_assassinate_reads_two_digit_seat():
+    r = prompts.parse_reply(f"{MARK_PRIVATE}\n分析\n{MARK_ASSASSINATE}P10", Action.ASSASSINATE)
+    assert r.target == "P10"
+
+
+def test_parse_team_keeps_single_digit_seats_apart():
+    text = f"{MARK_PRIVATE}\n分析\n{MARK_SPEECH}\n发言\n{MARK_TEAM}P10、P1、P9、P10"
+    assert prompts.parse_reply(text, Action.PROPOSE).team == ("P10", "P1", "P9")
+
+
+@pytest.mark.parametrize("players", [5, 6, 7, 8, 9, 10])
+def test_system_prompt_describes_this_game_only(players):
+    text = prompts.system_prompt("P1", Role.MERLIN, HiddenInfo(evil_players=("P2",)), players)
+    last = f"P{players}"
+    assert f"你正在参加一局 {players} 人阿瓦隆桌游" in text
+    assert f"座位编号 P1 到 {last}" in text and f"{last} 的下一位是 P1" in text
+    assert "、".join(str(n) for n in rules.quest_sizes(players)) in text
+    assert f"赞成达到 {rules.votes_to_approve(players)} 票则通过" in text
+    assert f"全体 {players} 人同时对队伍投赞成或反对" in text
+    assert f"其余 {players - 1} 人各发言一次" in text
+    # 不留写死的人数措辞。
+    for stale in ("五人阿瓦隆", "五名玩家", "其余三人都是好人", "其余四人", "全体五人"):
+        assert stale not in text
+    # 不在场的角色一个都不提。
+    absent = [r for r in rules.Role if r not in set(rules.roles_for(players))]
+    for role in absent:
+        assert prompts.ROLE_SHORT_ZH[role] not in text, role
+
+
+@pytest.mark.parametrize("players", [7, 8, 9, 10])
+def test_system_prompt_states_the_fourth_quest_threshold(players):
+    text = prompts.system_prompt("P1", Role.LOYAL_SERVANT, HiddenInfo(), players)
+    assert "第 4 次任务是例外，需要 2 张失败牌才失败" in text
+
+
+@pytest.mark.parametrize("players", [5, 6])
+def test_system_prompt_has_no_threshold_exception_below_seven(players):
+    text = prompts.system_prompt("P1", Role.LOYAL_SERVANT, HiddenInfo(), players)
+    assert "出现 1 张失败牌任务即失败。" in text and "例外" not in text
+
+
+def test_system_prompt_tells_merlin_about_mordred_without_naming_a_seat():
+    text = prompts.system_prompt("P1", Role.MERLIN, HiddenInfo(evil_players=("P2", "P3")), 9)
+    assert "莫德雷德" in text and "但你看不到他" in text
+    assert "P2 和 P3" in text
+
+
+def test_system_prompt_tells_oberon_he_is_alone():
+    text = prompts.system_prompt("P5", Role.OBERON, HiddenInfo(), 7)
+    assert "你不知道任何同伴" in text and "梅林能看到你" in text
+
+
+def test_system_prompt_lists_every_fellow_for_evil_in_a_big_game():
+    text = prompts.system_prompt("P1", Role.MORGANA, HiddenInfo(fellow_evils=("P4", "P7", "P9")), 10)
+    assert "P4、P7 和 P9" in text
+    assert "本局还有奥伯伦" in text
+
+
+@pytest.mark.parametrize("players", [5, 6, 7, 8, 9, 10])
+def test_execute_quest_instruction_carries_the_threshold(players):
+    for quest_index in (1, 4):
+        needed = rules.fails_to_fail_quest(players, quest_index)
+        text = prompts.instruction(Action.EXECUTE_QUEST, team=("P1", "P2"), fails_needed=needed)
+        assert f"本次任务出现 {needed} 张失败牌即失败" in text

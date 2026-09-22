@@ -18,7 +18,7 @@ from avalon.config import Config, estimate_cost_cny
 from avalon.control import CallCancelled, GameControl
 from avalon.player import Action, InvalidReply, Notice, Player, Reply
 from avalon.recorder import Recorder
-from avalon.rules import PLAYER_IDS, Role, Side
+from avalon.rules import Role, Side
 from avalon.state import GameState, Phase, Proposal, Quest, Speech
 
 Validator = Callable[[Reply], str | None]
@@ -51,10 +51,13 @@ class Referee:
         self.on_private = on_private
         self.control = control or GameControl()
         """暂停与终止的开关。不传则永远放行。"""
-        self.state = GameState(game_id=recorder.game_dir.name, seed=config.seed)
+        self.players_count = config.players
+        """本局人数，5 到 10。规则一律按它计算，模块里没有写死的座位表。"""
+        self.seats: tuple[str, ...] = rules.player_ids(self.players_count)
+        self.state = GameState(game_id=recorder.game_dir.name, seed=config.seed, players=self.players_count)
         self.public_log: list[PublicEvent] = []
         """全部公开事件，按时间排列。"""
-        self.cursor: dict[str, int] = {pid: 0 for pid in PLAYER_IDS}
+        self.cursor: dict[str, int] = {pid: 0 for pid in self.seats}
         """每名玩家已经收到的公开事件数。"""
 
     # ------------------------------------------------------------ 主循环
@@ -80,32 +83,33 @@ class Referee:
 
     def _init(self) -> None:
         s = self.state
-        s.assignments = rules.assign_roles(self.rng)
+        s.assignments = rules.assign_roles(self.rng, self.players_count)
         self.recorder.event(
             "game_start",
             game_id=s.game_id,
             seed=s.seed,
+            players=list(self.seats),
             seat_models=self.config.seat_models,
             thinking=self.config.thinking,
             assignments={pid: r.value for pid, r in s.assignments.items()},
         )
-        for pid in PLAYER_IDS:
+        for pid in self.seats:
             hidden = rules.hidden_info_for(pid, s.assignments)
-            self.players[pid].brief(prompts.system_prompt(pid, s.assignments[pid], hidden))
+            self.players[pid].brief(prompts.system_prompt(pid, s.assignments[pid], hidden, self.players_count))
             self._save_thread(pid)
         self._start_quest()
 
     def _start_quest(self) -> None:
         s = self.state
         index = len(s.quests) + 1
-        quest = Quest(index=index, size=rules.QUEST_SIZES[index - 1])
+        quest = Quest(index=index, size=rules.quest_size(self.players_count, index))
         s.quests.append(quest)
         self.recorder.event("quest_start", quest=index, size=quest.size)
         self._publish(prompts.event_quest_start(index, quest.size))
         if index == 1:
-            self._start_proposal(self.rng.choice(PLAYER_IDS), rotated=False)
+            self._start_proposal(self.rng.choice(self.seats), rotated=False)
         else:
-            self._start_proposal(rules.next_seat(s.quests[-2].proposals[-1].leader), rotated=True)
+            self._start_proposal(rules.next_seat(s.quests[-2].proposals[-1].leader, self.players_count), rotated=True)
 
     def _start_proposal(self, leader: str, rotated: bool) -> None:
         quest = self.state.current_quest
@@ -117,7 +121,7 @@ class Referee:
 
     def _discussion(self) -> None:
         leader = self.state.current_proposal.leader
-        for pid in rules.seats_from(leader):
+        for pid in rules.seats_from(leader, self.players_count):
             reply = self._ask(
                 pid,
                 Action.SPEAK,
@@ -138,27 +142,27 @@ class Referee:
                 return prompts.reason_bad_speech()
             team = r.team or ()
             for pid in team:
-                if pid not in PLAYER_IDS:
+                if pid not in self.seats:
                     return prompts.reason_bad_team_member(pid)
-            if not rules.is_legal_team(team, quest.size):
+            if not rules.is_legal_team(team, quest.size, self.players_count):
                 return prompts.reason_bad_team_size(quest.size)
             return None
 
         def fallback() -> Reply:
-            team = tuple(sorted(self.rng.sample(PLAYER_IDS, quest.size)))
+            team = tuple(sorted(self.rng.sample(self.seats, quest.size)))
             return Reply(private_analysis="", public_speech=prompts.FALLBACK_SPEECH.format(pid=leader), team=team)
 
         reply = self._ask(
             leader,
             Action.PROPOSE,
-            lambda: prompts.instruction(Action.PROPOSE, team_size=quest.size, candidates=PLAYER_IDS),
+            lambda: prompts.instruction(Action.PROPOSE, team_size=quest.size, candidates=self.seats),
             validate=validate,
             fallback=fallback,
             team_size=quest.size,
-            candidates=PLAYER_IDS,
+            candidates=self.seats,
         )
         self._record_speech(leader, reply)
-        proposal.team = tuple(pid for pid in PLAYER_IDS if pid in (reply.team or ()))
+        proposal.team = tuple(pid for pid in self.seats if pid in (reply.team or ()))
         self.recorder.event("team", quest=quest.index, proposal=proposal.index, leader=leader, team=list(proposal.team))
         self._publish(prompts.event_team(leader, proposal.team))
         self.state.phase = Phase.VOTING
@@ -178,13 +182,13 @@ class Referee:
             )
             return pid, bool(reply.vote)
 
-        for pid, vote in self._collect(list(PLAYER_IDS), ask_vote):
+        for pid, vote in self._collect(list(self.seats), ask_vote):
             proposal.votes[pid] = vote
-        proposal.approved = rules.is_approved(proposal.votes)
+        proposal.approved = rules.is_approved(proposal.votes, self.players_count)
         self.recorder.event(
             "votes", quest=quest.index, proposal=proposal.index, votes=dict(proposal.votes), approved=proposal.approved
         )
-        self._publish(prompts.event_votes(proposal.votes, proposal.approved))
+        self._publish(prompts.event_votes(proposal.votes, proposal.approved, self.players_count))
 
         if proposal.approved:
             quest.team = team
@@ -194,10 +198,11 @@ class Referee:
             self._finish(Side.EVIL, "five_rejections")
             return
         self._publish(prompts.event_rejections(quest.index, quest.rejections))
-        self._start_proposal(rules.next_seat(proposal.leader), rotated=True)
+        self._start_proposal(rules.next_seat(proposal.leader, self.players_count), rotated=True)
 
     def _quest_execution(self) -> None:
         quest = self.state.current_quest
+        fails_needed = rules.fails_to_fail_quest(self.players_count, quest.index)
         evil_members = [pid for pid in quest.team if rules.side_of(self.state.assignments[pid]) == Side.EVIL]
         for pid in quest.team:
             if pid not in evil_members:
@@ -207,7 +212,7 @@ class Referee:
             reply = self._ask(
                 pid,
                 Action.EXECUTE_QUEST,
-                lambda: prompts.instruction(Action.EXECUTE_QUEST, team=quest.team),
+                lambda: prompts.instruction(Action.EXECUTE_QUEST, team=quest.team, fails_needed=fails_needed),
                 validate=lambda r: None if r.quest_success is not None else prompts.reason_missing_card(),
                 fallback=lambda: Reply(private_analysis="", quest_success=True),
             )
@@ -221,7 +226,9 @@ class Referee:
         s = self.state
         quest = s.current_quest
         quest.fail_count = sum(1 for v in quest.cards.values() if not v)
-        quest.succeeded = not rules.quest_failed(quest.fail_count)
+        quest.succeeded = not rules.quest_failed(
+            quest.fail_count, rules.fails_to_fail_quest(self.players_count, quest.index)
+        )
         self.recorder.event(
             "quest_result",
             quest=quest.index,
@@ -244,7 +251,7 @@ class Referee:
     def _assassination(self) -> None:
         s = self.state
         assassin = rules.player_with_role(s.assignments, Role.ASSASSIN)
-        candidates = tuple(pid for pid in PLAYER_IDS if pid != assassin)
+        candidates = tuple(pid for pid in self.seats if pid != assassin)
 
         def validate(r: Reply) -> str | None:
             if r.target not in candidates:
@@ -284,7 +291,7 @@ class Referee:
         self._publish(prompts.event_game_over(s.winner, s.win_reason, s.assignments, s.assassination_target))
         self.recorder.save_public(s)
         self.recorder.save_result(s)
-        for pid in PLAYER_IDS:
+        for pid in self.seats:
             self._save_thread(pid)
         self.recorder.write_transcript(s)
 

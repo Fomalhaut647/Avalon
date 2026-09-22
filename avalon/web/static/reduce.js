@@ -1,19 +1,35 @@
 // 把裁判事件流归约成画面模型。回放就是只喂前 N 条事件再归约一次。
 // 事件种类见 docs/architecture.md 第六节；这里不依赖 public.json，一切都从 events.jsonl 推出。
 
-import { PIDS, QUEST_SIZES } from "./util.js";
+import { DEFAULT_PLAYERS, seatIds, questSizes } from "./util.js";
 
-function seatsFrom(leader) {
-  const i = PIDS.indexOf(leader);
-  return i < 0 ? [...PIDS] : [...PIDS.slice(i), ...PIDS.slice(0, i)];
+function seatsFrom(leader, pids) {
+  const i = pids.indexOf(leader);
+  return i < 0 ? [...pids] : [...pids.slice(i), ...pids.slice(0, i)];
 }
 
 function newTurnState() {
   return { calls: [], invalids: [] };
 }
 
+function newPerPlayer() {
+  return { calls: 0, cost: 0, promptTokens: 0, completionTokens: 0, teams: 0, success: 0, fail: 0, failCards: 0, leaderCount: 0, spoke: 0 };
+}
+
+/** 事件里没有座位名单的旧局按 5 人。 */
+function playersOf(events) {
+  const start = events.find((e) => e.kind === "game_start");
+  const seats = start && Array.isArray(start.players) ? start.players.length : 0;
+  return seats || DEFAULT_PLAYERS;
+}
+
 export function reduce(events) {
+  const players = playersOf(events);
+  const pids = seatIds(players);
   const m = {
+    players,
+    pids,
+    questSizes: questSizes(players),
     start: null,
     assignments: {},
     quests: [],
@@ -23,7 +39,7 @@ export function reduce(events) {
     over: null,
     control: { paused: false, pausing: false, terminating: false, terminated: false, error: null, voided: [], log: [] },
     stats: { calls: 0, promptTokens: 0, completionTokens: 0, reasoningTokens: 0, cacheHit: 0, cacheMiss: 0, cost: 0, latencies: [], maxLatency: null, invalid: 0, fallbacks: 0, voided: 0 },
-    perPlayer: Object.fromEntries(PIDS.map((p) => [p, { calls: 0, cost: 0, promptTokens: 0, completionTokens: 0, teams: 0, success: 0, fail: 0, failCards: 0, leaderCount: 0, spoke: 0 }])),
+    perPlayer: Object.fromEntries(pids.map((p) => [p, newPerPlayer()])),
     successCount: 0,
     failCount: 0,
     firstTs: null,
@@ -34,7 +50,13 @@ export function reduce(events) {
     proposalCount: 0,
     turns: [],
   };
-  const acc = Object.fromEntries(PIDS.map((p) => [p, newTurnState()]));
+  const acc = Object.fromEntries(pids.map((p) => [p, newTurnState()]));
+  // 万一事件里出现名单之外的座位，补一份空记录，画面不至于崩。
+  const ensure = (pid) => {
+    if (!pid) return;
+    if (!m.perPlayer[pid]) m.perPlayer[pid] = newPerPlayer();
+    if (!acc[pid]) acc[pid] = newTurnState();
+  };
   const quest = () => m.quests[m.quests.length - 1];
   const proposal = () => { const q = quest(); return q && q.proposals[q.proposals.length - 1]; };
 
@@ -43,18 +65,20 @@ export function reduce(events) {
     m.lastTs = e.ts;
     m.lastSeq = e.seq;
     m.lastEvent = e;
+    ensure(e.player);
     switch (e.kind) {
       case "game_start":
         m.start = { seed: e.seed, seatModels: e.seat_models || {}, thinking: !!e.thinking, assignments: e.assignments || {}, ts: e.ts };
         m.assignments = e.assignments || {};
         break;
       case "quest_start":
-        m.quests.push({ index: e.quest, size: e.size || QUEST_SIZES[e.quest - 1], proposals: [], team: [], cards: {}, failCount: null, succeeded: null, startEvent: e, resultEvent: null });
+        m.quests.push({ index: e.quest, size: e.size || m.questSizes[e.quest - 1], proposals: [], team: [], cards: {}, failCount: null, succeeded: null, startEvent: e, resultEvent: null });
         break;
       case "leader": {
         const q = quest();
         if (!q) break;
-        q.proposals.push({ index: e.proposal, leader: e.leader, rotated: !!e.rotated, leaderEvent: e, order: seatsFrom(e.leader), speeches: [], proposeTurn: null, team: [], teamEvent: null, votes: {}, voteTurns: {}, approved: null, votesEvent: null, execTurns: {}, stage: "discussion" });
+        ensure(e.leader);
+        q.proposals.push({ index: e.proposal, leader: e.leader, rotated: !!e.rotated, leaderEvent: e, order: seatsFrom(e.leader, m.pids), speeches: [], proposeTurn: null, team: [], teamEvent: null, votes: {}, voteTurns: {}, approved: null, votesEvent: null, execTurns: {}, stage: "discussion" });
         m.perPlayer[e.leader].leaderCount += 1;
         m.proposalCount += 1;
         m.phase = "DISCUSSION";
@@ -104,7 +128,7 @@ export function reduce(events) {
         delete m.pending[e.player];
         m.turns.push(turn);
         const p = proposal();
-        if (e.action === "speak" && p) { p.speeches.push(turn); m.speechCount += 1; m.perPlayer[e.player].spoke += 1; if (p.speeches.length >= PIDS.length) { m.phase = "PROPOSAL"; p.stage = "proposal"; } }
+        if (e.action === "speak" && p) { p.speeches.push(turn); m.speechCount += 1; m.perPlayer[e.player].spoke += 1; if (p.speeches.length >= m.players) { m.phase = "PROPOSAL"; p.stage = "proposal"; } }
         else if (e.action === "propose" && p) { p.proposeTurn = turn; m.speechCount += 1; }
         else if (e.action === "vote" && p) { p.voteTurns[e.player] = turn; p.votes[e.player] = !!e.vote; }
         else if (e.action === "execute_quest" && p) { p.execTurns[e.player] = turn; const q = quest(); if (q) q.cards[e.player] = !!e.card; if (e.card === false) m.perPlayer[e.player].failCards += 1; }
@@ -184,7 +208,7 @@ export function situationTitle(m) {
   if (m.control.terminated) return "对局已终止";
   if (m.control.error) return "对局出错中止";
   if (m.phase === "ASSASSINATION") {
-    const a = PIDS.find((p) => m.assignments[p] === "Assassin");
+    const a = m.pids.find((p) => m.assignments[p] === "Assassin");
     return `刺杀阶段 · 刺客 ${a || "?"} 选择目标`;
   }
   const q = currentQuest(m), p = currentProposal(m);
@@ -193,9 +217,9 @@ export function situationTitle(m) {
   return `第 ${q.index} 次任务 · 第 ${p.index} 次提案 · 队长 ${p.leader}`;
 }
 
-/** 任务圆圈的状态列表（五个）。 */
+/** 任务圆圈的状态列表（一局最多五次任务）。 */
 export function questStates(m) {
-  return QUEST_SIZES.map((_, i) => {
+  return m.questSizes.map((_, i) => {
     const q = m.quests[i];
     if (!q) return "upcoming";
     if (q.succeeded === true) return "success";
@@ -289,6 +313,7 @@ const ACTION_KINDS = new Set(["ask", "llm_call", "invalid_reply", "fallback", "v
  * 以最后一条的序号作为落点。行动可以被暂停类事件打断，所以一步的事件不一定连续。
  */
 export function buildSteps(events) {
+  const players = playersOf(events);
   const steps = [];
   const open = {}; // 行动的键 -> 未结束的步
   let questStep = null, controlStep = null;
@@ -331,7 +356,7 @@ export function buildSteps(events) {
   // 每步以最后一条事件为落点，按落点排序、编号。
   for (const s of steps) { s.end = Math.max(...s.seqs); s.start = Math.min(...s.seqs); }
   steps.sort((a, b) => a.end - b.end);
-  steps.forEach((s, i) => { s.index = i + 1; s.title = stepTitle(s); });
+  steps.forEach((s, i) => { s.index = i + 1; s.title = stepTitle(s, players); });
   return steps;
 }
 
@@ -357,7 +382,7 @@ export function stepIndexAt(steps, seq) {
 
 const ACT = { speak: "发言", propose: "提案", vote: "投票", execute_quest: "出牌", assassinate: "刺杀" };
 
-export function stepTitle(step) {
+export function stepTitle(step, players = DEFAULT_PLAYERS) {
   const ev = step.events, last = ev[ev.length - 1];
   const has = (k) => ev.some((e) => e.kind === k);
   switch (step.kind) {
@@ -379,7 +404,7 @@ export function stepTitle(step) {
       const suffix = extra.length ? `（${extra.join("，")}）` : "";
       if (a === "speak") { const t = turns[0]; return t ? `${t.player} 发言${suffix}` : `${step.players[0] || ""} 正在发言${suffix}`; }
       if (a === "propose") { const t = turns[0]; const team = ev.find((e) => e.kind === "team"); return t ? `队长 ${t.player} 提出队伍 ${(team ? team.team : t.team || []).join("、")}${suffix}` : `队长 ${step.players[0] || ""} 正在指派队伍${suffix}`; }
-      if (a === "vote") { const v = ev.find((e) => e.kind === "votes"); if (v) { const yes = Object.values(v.votes).filter(Boolean).length; return `全体投票：${yes} : ${Object.keys(v.votes).length - yes} ${v.approved ? "通过" : "否决"}${suffix}`; } return `全体投票中，已收到 ${turns.length} / 5${suffix}`; }
+      if (a === "vote") { const v = ev.find((e) => e.kind === "votes"); if (v) { const yes = Object.values(v.votes).filter(Boolean).length; return `全体投票：${yes} : ${Object.keys(v.votes).length - yes} ${v.approved ? "通过" : "否决"}${suffix}`; } return `全体投票中，已收到 ${turns.length} / ${players}${suffix}`; }
       if (a === "execute_quest") { const r = ev.find((e) => e.kind === "quest_result"); if (r) return `第 ${r.quest} 次任务执行与结算：${r.succeeded ? "成功" : `失败，${r.fail_count} 张失败牌`}${suffix}`; return `任务执行中，${step.players.join("、")} 出牌${suffix}`; }
       if (a === "assassinate") { const r = ev.find((e) => e.kind === "assassination"); if (r) return `刺客 ${r.assassin} 刺杀 ${r.target}，${r.hit ? "命中梅林" : "未中"}${suffix}`; return `刺客 ${step.players[0] || ""} 正在选择目标${suffix}`; }
       return describeEvent(last);

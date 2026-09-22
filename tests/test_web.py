@@ -277,3 +277,92 @@ def test_http_controlling_disk_only_game_is_409(server, manager):
     (d / "events.jsonl").write_text(json.dumps({"seq": 1, "ts": "2026-09-01T01:00:00.000+00:00", "kind": "game_start", "seed": 1}) + "\n", encoding="utf-8")
     assert httpx.post(f"{server}/api/games/20260901-0900-abcd/pause").status_code == 409
     assert httpx.get(f"{server}/api/games/20260901-0900-abcd").json()["status"] == "interrupted"
+
+
+# ------------------------------------------------------------ 5 到 10 人
+
+
+def test_http_ten_player_game(server, manager):
+    r = httpx.post(f"{server}/api/games", json={"random_players": True, "random_delay_s": 0, "players": 10})
+    assert r.status_code == 201
+    (gid,) = r.json()["ids"]
+    wait_for(lambda: manager.summary(gid)["status"] == "finished", timeout=30, what="十人局结束")
+    one = httpx.get(f"{server}/api/games/{gid}").json()
+    assert one["player_count"] == 10
+    assert set(one["assignments"]) == {f"P{i}" for i in range(1, 11)}
+    assert len(one["assignments"]) == 10
+    # 本局有的座位放行，没有的座位与超出范围的座位都是 404。
+    assert httpx.get(f"{server}/api/games/{gid}/players/P10").status_code == 200
+    assert httpx.get(f"{server}/api/games/{gid}/players/P11").status_code == 404
+    # 随机玩家没有对话线程，文件不会生成；但 P10.json 是认得的产物名，P11.json 不是。
+    ten = httpx.get(f"{server}/api/games/{gid}/files/players/P10.json")
+    assert ten.status_code == 404 and ten.json()["error"] == "文件尚未生成"
+    eleven = httpx.get(f"{server}/api/games/{gid}/files/players/P11.json")
+    assert eleven.status_code == 404 and eleven.json()["error"] == "没有这个文件"
+    # 任务人数按十人局的表，不是五人局的。
+    quests = one["quests"]
+    assert [q["size"] for q in quests] == [3, 4, 4, 5, 5][: len(quests)]
+    # 事件里带本局座位名单。
+    events = httpx.get(f"{server}/api/games/{gid}/events").json()["events"]
+    assert events[0]["players"] == [f"P{i}" for i in range(1, 11)]
+
+
+def test_http_five_player_game_is_unchanged(server, manager):
+    r = httpx.post(f"{server}/api/games", json={"random_players": True, "random_delay_s": 0})
+    (gid,) = r.json()["ids"]
+    wait_for(lambda: manager.summary(gid)["status"] == "finished", timeout=30, what="五人局结束")
+    one = httpx.get(f"{server}/api/games/{gid}").json()
+    assert one["player_count"] == 5
+    assert set(one["assignments"]) == {"P1", "P2", "P3", "P4", "P5"}
+    six = httpx.get(f"{server}/api/games/{gid}/players/P6")
+    assert six.status_code == 404 and six.json()["error"] == "这一局没有这个座位"
+    six_file = httpx.get(f"{server}/api/games/{gid}/files/players/P6.json")
+    assert six_file.status_code == 404 and six_file.json()["error"] == "这一局没有这个座位"
+
+
+@pytest.mark.parametrize("bad", [4, 11, 0, -1, 100])
+def test_http_rejects_player_counts_outside_five_to_ten(server, bad):
+    r = httpx.post(f"{server}/api/games", json={"random_players": True, "players": bad})
+    assert r.status_code == 422
+
+
+def test_config_reports_the_player_count_range(server):
+    cfg = httpx.get(f"{server}/api/config").json()
+    assert cfg["player_count"] == 5 and cfg["min_player_count"] == 5 and cfg["max_player_count"] == 10
+    # 人数字段与事件里的座位名单不重名。
+    assert "players" not in cfg
+
+
+@pytest.mark.parametrize("players", [6, 7, 8, 9])
+def test_manager_runs_every_player_count(manager, players):
+    (gid,) = manager.create(random_params(players=players))
+    wait_for(lambda: manager.summary(gid)["status"] == "finished", timeout=30, what=f"{players} 人局结束")
+    summary = manager.summary(gid)
+    assert summary["player_count"] == players
+    assert len(summary["assignments"]) == players
+    assert manager.seats_of(gid) == tuple(f"P{i}" for i in range(1, players + 1))
+
+
+def test_disk_summary_defaults_to_five_players_for_old_games(manager, tmp_path):
+    """旧局的事件里没有座位名单，一律当五人局。"""
+    game_dir = manager.games_dir / "20250101-1200-abcd"
+    game_dir.mkdir(parents=True)
+    old_start = {"seq": 1, "ts": "2025-01-01T12:00:00.000+00:00", "kind": "game_start", "seed": 1, "seat_models": {"P1": "x"}}
+    (game_dir / "events.jsonl").write_text(json.dumps(old_start, ensure_ascii=False) + "\n", encoding="utf-8")
+    summary = manager.summary("20250101-1200-abcd")
+    assert summary["player_count"] == 5
+    assert manager.seats_of("20250101-1200-abcd") == ("P1", "P2", "P3", "P4", "P5")
+
+
+def test_summary_never_reuses_the_seat_list_name(server, manager):
+    """摘要里的人数叫 player_count；players 只在事件与 public.json 里表示座位名单。"""
+    (gid,) = manager.create(random_params(players=7))
+    wait_for(lambda: manager.summary(gid)["status"] == "finished", timeout=30, what="七人局结束")
+    summary = httpx.get(f"{server}/api/games/{gid}").json()
+    assert summary["player_count"] == 7
+    assert "players" not in summary
+    events = httpx.get(f"{server}/api/games/{gid}/events").json()["events"]
+    assert events[0]["players"] == [f"P{i}" for i in range(1, 8)]
+    public = httpx.get(f"{server}/api/games/{gid}/files/public.json").json()
+    assert public["players"] == [f"P{i}" for i in range(1, 8)]
+    assert "player_count" not in public

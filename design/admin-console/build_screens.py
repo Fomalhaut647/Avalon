@@ -86,6 +86,37 @@ ROLES = {
 PIDS = ["P1", "P2", "P3", "P4", "P5"]
 GAME_ID = "20260914-1032-7f3a"
 
+# 画面 0 到 6 用的假想对局是五人局。画面 7 专门讲人数：同一张牌桌坐满十人时的角色与隐藏信息。
+# 十人局的角色构成见 docs/rules.md 第三节：梅林、派西维尔、忠臣 ×4、莫甘娜、刺客、奥伯伦、莫德雷德。
+ROLES_TEN = {
+    "P1": ("忠臣", "good", "无额外信息"),
+    "P2": ("莫甘娜", "evil", "队友 P4、P10"),
+    "P3": ("梅林", "good", "看到 P2、P4、P8 是邪恶，看不到莫德雷德"),
+    "P4": ("刺客", "evil", "队友 P2、P10"),
+    "P5": ("派西维尔", "good", "看到 P2、P3 之一是梅林"),
+    "P6": ("忠臣", "good", "无额外信息"),
+    "P7": ("忠臣", "good", "无额外信息"),
+    "P8": ("奥伯伦", "evil", "不知同伴，同伴也不知他"),
+    "P9": ("忠臣", "good", "无额外信息"),
+    "P10": ("莫德雷德", "evil", "队友 P2、P4"),
+}
+PIDS_TEN = [f"P{i}" for i in range(1, 11)]
+
+# 各人数的规则表，与 avalon/rules.py 一致。
+BY_COUNT = {
+    5: ((2, 3, 2, 3, 3), 3, "—"),
+    6: ((2, 3, 4, 3, 4), 4, "—"),
+    7: ((2, 3, 3, 4, 4), 4, "第 4 次任务 2 张"),
+    8: ((3, 4, 4, 5, 5), 5, "第 4 次任务 2 张"),
+    9: ((3, 4, 4, 5, 5), 5, "第 4 次任务 2 张"),
+    10: ((3, 4, 4, 5, 5), 6, "第 4 次任务 2 张"),
+}
+
+
+def seat_columns(count: int) -> int:
+    """座位卡一行摆几张：六人以内一行排开，再多就两行。与前端 seatColumns 一致。"""
+    return count if count <= 6 else -(-count // 2)
+
 # ---------------------------------------------------------------- 图标
 
 SVG_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
@@ -169,9 +200,9 @@ def vote_tag(v: bool | None) -> str:
     return tag("投票中", "wait")
 
 
-def cells(votes: dict[str, bool | None]) -> str:
+def cells(votes: dict[str, bool | None], pids: list[str] | None = None) -> str:
     out = []
-    for pid in PIDS:
+    for pid in pids or PIDS:
         v = votes.get(pid)
         common = "width: 30px; height: 22px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-sizing: border-box;"
         if v is True:
@@ -329,8 +360,8 @@ STEPS = ["讨论", "提案", "投票", "执行", "结算"]
 # ---------------------------------------------------------------- 座位
 
 
-def seat(pid: str, *, tags: list[str], record: str, calls: str, highlight: bool = False) -> str:
-    role, side, hidden = ROLES[pid]
+def seat(pid: str, *, tags: list[str], record: str, calls: str, highlight: bool = False, roles: dict | None = None) -> str:
+    role, side, hidden = (roles or ROLES)[pid]
     border = f"2px solid {INK}" if highlight else f"1px solid {LINE}"
     pad = "13px 15px" if highlight else "14px 16px"
     return f"""
@@ -348,8 +379,9 @@ def seat(pid: str, *, tags: list[str], record: str, calls: str, highlight: bool 
         </div>"""
 
 
-def seats_row(cards: list[str]) -> str:
-    return f'<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;">{"".join(cards)}</div>'
+def seats_row(cards: list[str], columns: int = 5) -> str:
+    """座位卡网格。前端用 CSS 变量 --seat-cols 表达同一条规则，列数由 seat_columns 给出。"""
+    return f'<div style="display: grid; grid-template-columns: repeat({columns}, minmax(0, 1fr)); gap: 12px;">{"".join(cards)}</div>'
 
 
 # ---------------------------------------------------------------- 面板与时间线片段
@@ -1073,25 +1105,26 @@ def screen_lobby() -> str:
       <span style="font-size: 13px; color: {INK2};">对局列表</span>
     </div>
     <div style="display: flex; align-items: center; gap: 14px;">
-      <span class="mono" style="font-size: 12px; color: {INK2};">games/ 共 9 局 · 累计 3.28 元</span>
+      <span class="mono" style="font-size: 12px; color: {INK2};">games/ 共 10 局 · 累计 5.34 元</span>
       <span style="font-size: 13px; padding: 7px 14px; border-radius: 6px; background: {INK}; color: {CARD}; font-weight: 500;">新开一局</span>
     </div>
   </div>"""
-    cols = "grid-template-columns: 170px 90px 150px 88px minmax(0, 1fr) 84px 56px 52px;"
-    head_row = f'<div class="mono" style="display: grid; {cols} gap: 10px; font-size: 11px; color: {INK3}; padding: 0 16px 8px; border-bottom: 1px solid {LINE};"><span>局号</span><span>开始</span><span>模型 · 隐藏思考</span><span>任务</span><span>状态与结果</span><span>用时</span><span>费用 元</span><span></span></div>'
+    cols = "grid-template-columns: 170px 90px 176px 88px minmax(0, 1fr) 84px 56px 52px;"
+    head_row = f'<div class="mono" style="display: grid; {cols} gap: 10px; font-size: 11px; color: {INK3}; padding: 0 16px 8px; border-bottom: 1px solid {LINE};"><span>局号</span><span>开始</span><span>人数 · 模型 · 隐藏思考</span><span>任务</span><span>状态与结果</span><span>用时</span><span>费用 元</span><span></span></div>'
     games = [
-        (GAME_ID, "09-14 10:32", "deepseek-flash", "关", ("current", "第 3 次任务 · 讨论"), ["success", "fail", "current", "upcoming", "upcoming"], ("", "进行中 · 好人 1 : 邪恶 1"), "4 分 06 秒", "0.061", "进入"),
-        ("20260913-2214-c1e9", "09-13 22:14", "deepseek-flash", "开", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P2"), "12 分 40 秒", "0.83", "复盘"),
-        ("20260913-2213-a0d4", "09-13 22:13", "deepseek-flash", "开", ("over", "已结束"), ["success", "success", "fail", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P5"), "19 分 51 秒", "1.24", "复盘"),
-        ("20260913-2213-5b77", "09-13 22:13", "deepseek-flash", "开", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("good", "好人胜 · 刺杀 P1 未中"), "8 分 03 秒", "0.52", "复盘"),
-        ("20260913-2140-e812", "09-13 21:40", "deepseek-flash", "关", ("over", "已结束"), ["success", "success", "fail", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P3"), "2 分 58 秒", "0.14", "复盘"),
-        ("20260913-2140-91f0", "09-13 21:40", "deepseek-flash", "关", ("over", "已结束"), ["success", "fail", "success", "fail", "success"], ("evil", "邪恶胜 · 刺中梅林 P4"), "3 分 22 秒", "0.13", "复盘"),
-        ("20260913-2140-3c2a", "09-13 21:40", "deepseek-flash", "关", ("over", "已结束"), ["fail", "success", "fail", "fail", "upcoming"], ("evil", "邪恶胜 · 累计 3 次任务失败"), "1 分 47 秒", "0.09", "复盘"),
-        ("20260913-1905-d6e1", "09-13 19:05", "deepseek-flash", "关", ("over", "已结束"), ["success", "success", "success", "upcoming", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P1"), "2 分 31 秒", "0.12", "复盘"),
-        ("20260913-1858-7a19", "09-13 18:58", "deepseek-flash", "关", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P2"), "3 分 05 秒", "0.15", "复盘"),
+        (GAME_ID, "09-14 10:32", 5, "deepseek-flash", "关", ("current", "第 3 次任务 · 讨论"), ["success", "fail", "current", "upcoming", "upcoming"], ("", "进行中 · 好人 1 : 邪恶 1"), "4 分 06 秒", "0.061", "进入"),
+        ("20260914-1004-b3d5", "09-14 10:04", 10, "deepseek-flash", "开", ("over", "已结束"), ["success", "fail", "fail", "success", "fail"], ("evil", "邪恶胜 · 累计 3 次任务失败"), "31 分 12 秒", "2.06", "复盘"),
+        ("20260913-2214-c1e9", "09-13 22:14", 5, "deepseek-flash", "开", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P2"), "12 分 40 秒", "0.83", "复盘"),
+        ("20260913-2213-a0d4", "09-13 22:13", 7, "deepseek-flash", "开", ("over", "已结束"), ["success", "success", "fail", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P5"), "19 分 51 秒", "1.24", "复盘"),
+        ("20260913-2213-5b77", "09-13 22:13", 5, "deepseek-flash", "开", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("good", "好人胜 · 刺杀 P1 未中"), "8 分 03 秒", "0.52", "复盘"),
+        ("20260913-2140-e812", "09-13 21:40", 6, "deepseek-flash", "关", ("over", "已结束"), ["success", "success", "fail", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P3"), "2 分 58 秒", "0.14", "复盘"),
+        ("20260913-2140-91f0", "09-13 21:40", 5, "deepseek-flash", "关", ("over", "已结束"), ["success", "fail", "success", "fail", "success"], ("evil", "邪恶胜 · 刺中梅林 P4"), "3 分 22 秒", "0.13", "复盘"),
+        ("20260913-2140-3c2a", "09-13 21:40", 5, "deepseek-flash", "关", ("over", "已结束"), ["fail", "success", "fail", "fail", "upcoming"], ("evil", "邪恶胜 · 累计 3 次任务失败"), "1 分 47 秒", "0.09", "复盘"),
+        ("20260913-1905-d6e1", "09-13 19:05", 5, "deepseek-flash", "关", ("over", "已结束"), ["success", "success", "success", "upcoming", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P1"), "2 分 31 秒", "0.12", "复盘"),
+        ("20260913-1858-7a19", "09-13 18:58", 8, "deepseek-flash", "关", ("over", "已结束"), ["success", "fail", "success", "success", "upcoming"], ("evil", "邪恶胜 · 刺中梅林 P2"), "3 分 05 秒", "0.15", "复盘"),
     ]
     rows = ""
-    for gid, start, model, thinking, (st, st_text), quests, (winner, result), elapsed, cost, action in games:
+    for gid, start, count, model, thinking, (st, st_text), quests, (winner, result), elapsed, cost, action in games:
         if st == "current":
             res = f'<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: {GREEN_TEXT}; font-weight: 500; white-space: nowrap;"><span class="pulse" style="width: 8px; height: 8px; border-radius: 50%; background: {GREEN}; display: inline-block;"></span>进行中 · {st_text} · 好人 1 : 邪恶 1</span>'
             bg = f" background: {STRIP};"
@@ -1106,7 +1139,7 @@ def screen_lobby() -> str:
           <div style="display: grid; {cols} gap: 10px; align-items: center; padding: 11px 16px; border-bottom: 1px solid {LINE2}; font-size: 13px; color: {INK};{bg}">
             <span class="mono" style="font-size: 12px; white-space: nowrap;">{gid}</span>
             <span class="mono" style="font-size: 12px; color: {INK2}; white-space: nowrap;">{start}</span>
-            <span class="mono" style="font-size: 12px; color: {INK2}; white-space: nowrap;">{model} · {thinking}</span>
+            <span class="mono" style="font-size: 12px; color: {INK2}; white-space: nowrap;">{count} 人 · {model} · {thinking}</span>
             {dots(quests)}
             {res}
             <span class="mono" style="font-size: 12px; color: {INK2}; white-space: nowrap;">{elapsed}</span>
@@ -1117,9 +1150,9 @@ def screen_lobby() -> str:
       <div style="background: {CARD}; border: 1px solid {LINE}; border-radius: 6px; padding: 16px 0 4px; box-sizing: border-box;">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px 14px;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: {INK}; color: {CARD}; font-weight: 500;">全部 9</span>
+            <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; background: {INK}; color: {CARD}; font-weight: 500;">全部 10</span>
             <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid {LINE}; color: {INK2};">进行中 1</span>
-            <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid {LINE}; color: {INK2};">已结束 8</span>
+            <span style="font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid {LINE}; color: {INK2};">已结束 9</span>
           </div>
           <span style="font-size: 12px; color: {INK3};">按开始时间倒序 · 数据来自每局的 result.json 与 public.json</span>
         </div>
@@ -1146,11 +1179,12 @@ def screen_lobby() -> str:
           <span style="font-size: 12px; color: {INK3};">等同命令行参数</span>
         </div>
         {field("种子", input_box("留空则随机", placeholder=True), "同一种子重放同样的角色分配与第一任队长")}
-        {field("模型", select_box("deepseek-flash（V4.1 Flash）"), "五个座位使用同一模型；分座位配置留待玩家界面阶段")}
+        {field("人数", select_box("5 人"), "可选 5 到 10；任务人数 2、3、2、3、3，提案需 3 票通过。改人数时这行提示跟着变")}
+        {field("模型", select_box("deepseek-flash（V4.1 Flash）"), "所有座位使用同一模型；分座位配置留待玩家界面阶段")}
         {field("隐藏思考", toggle(False, "开", "关 · 一局约 3 到 5 分钟"), "打开后输出 token 约 10 倍，一局 4 到 20 分钟")}
         {field("投票与出牌并行", toggle(True, "开", "关"))}
         <span style="font-size: 13px; padding: 9px 14px; border-radius: 6px; background: {INK}; color: {CARD}; font-weight: 500; text-align: center;">开始对局并进入裁判席</span>
-        <div style="font-size: 12px; color: {INK3}; line-height: 1.6; padding-top: 8px; border-top: 1px solid {LINE2};">开始后浮现裁判席页面，五位玩家先各收到一份系统提示，随后从第 1 次任务的讨论开始。中途关闭页面不影响对局，随时可以回来接着看。</div>
+        <div style="font-size: 12px; color: {INK3}; line-height: 1.6; padding-top: 8px; border-top: 1px solid {LINE2};">开始后浮现裁判席页面，每位玩家先各收到一份系统提示，随后从第 1 次任务的讨论开始。中途关闭页面不影响对局，随时可以回来接着看。</div>
       </div>"""
     body = head + f"""
   <div style="box-sizing: border-box; padding: 20px 24px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start;">
@@ -1158,6 +1192,110 @@ def screen_lobby() -> str:
     <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">{new_game}</div>
   </div>"""
     return page(body, 760)
+
+
+# ================================================================ 画面七：人数与座位排布
+
+
+def _seat_demo(pid: str, roles: dict) -> str:
+    return seat(pid, tags=[], record="上队 0", calls="0 次调用 · 0.000 元", roles=roles)
+
+
+def _panel(title: str, note: str, inner: str) -> str:
+    return f"""
+      <div style="background: {CARD}; border: 1px solid {LINE}; border-radius: 6px; padding: 18px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid {LINE};">
+          <span class="serif" style="font-size: 17px; font-weight: 700; color: {INK};">{title}</span>
+          <span style="font-size: 12px; color: {INK3};">{note}</span>
+        </div>
+        {inner}
+      </div>"""
+
+
+SEAT_TABLE_COLS = "grid-template-columns: 56px 92px minmax(0, 1fr) 150px 84px 108px 150px;"
+SEAT_TABLE_EXTRA = {
+    5: "五人局底牌",
+    6: "+忠臣",
+    7: "+忠臣 +奥伯伦",
+    8: "+2 忠臣 +爪牙",
+    9: "+3 忠臣 +莫德雷德",
+    10: "+3 忠臣 +奥伯伦 +莫德雷德",
+}
+
+
+def screen_seat_layout() -> str:
+    """专讲人数：座位卡在 5 到 10 人下怎么摆，十人局的角色与隐藏信息，各人数的规则表。"""
+    title_bar = f"""
+  <div style="height: 60px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: {CARD}; border-bottom: 1px solid {LINE};">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div class="serif" style="font-size: 19px; font-weight: 700; letter-spacing: 0.02em; color: {INK}; white-space: nowrap;">阿瓦隆 · 裁判席</div>
+      <span style="font-size: 13px; color: {INK2};">人数与座位排布</span>
+    </div>
+    <span style="font-size: 12px; color: {INK3};">一局 5 到 10 人，开局时选定，整局不变</span>
+  </div>"""
+
+    label_five = f'<div style="font-size: 12px; color: {INK3};">5 人 · 一行 5 列 · 用画面 0 到 6 那局的角色</div>'
+    label_ten = f'<div style="font-size: 12px; color: {INK3}; padding-top: 6px;">10 人 · 两行 5 列 · 另一局，角色与隐藏信息按十人局重算</div>'
+    rule = f"""<div style="font-size: 13px; color: {INK2}; line-height: 1.8;">
+          列数规则：六人以内一行排开；七人及以上折成两行，列数取人数的一半向上取整，即七人 4 列、八人 4 列、九人 5 列、十人 5 列。
+          前端用 CSS 变量 <span class="mono">--seat-cols</span> 表达同一条规则，卡片本身不改尺寸。
+        </div>"""
+    layout_inner = (
+        label_five
+        + seats_row([_seat_demo(pid, ROLES) for pid in PIDS], seat_columns(5))
+        + label_ten
+        + seats_row([_seat_demo(pid, ROLES_TEN) for pid in PIDS_TEN], seat_columns(10))
+        + rule
+    )
+    layout = _panel("座位卡：五人一行，十人两行", "卡片尺寸不随人数变，只变列数", layout_inner)
+
+    ten_votes = cells(
+        {"P1": True, "P2": False, "P3": True, "P4": None, "P5": None, "P6": True, "P7": True, "P8": False, "P9": True, "P10": None},
+        PIDS_TEN,
+    )
+    parallel_inner = f"""<div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          {ten_votes}
+          <span style="font-size: 12px; color: {INK2};">已收到 7 / 10 · 10 人并行</span>
+        </div>
+        <div style="font-size: 13px; color: {INK2}; line-height: 1.8;">
+          投票格一人一格横向排开，不折行。面板右上角的进度与提示语都写本局人数，不写死"五人""三人赞成"。
+          十人局提案需 6 票赞成才通过，平票按否决处理。
+        </div>"""
+    parallel = _panel("投票格与并行提示", "十人局的一次投票", parallel_inner)
+
+    head_cells = "".join(
+        f'<span style="font-size: 11px; color: {INK3};">{h}</span>'
+        for h in ("人数", "座位", "角色构成", "任务人数", "通过票数", "每次提案发言", "失败牌门槛")
+    )
+    rows = ""
+    for count, (sizes, votes, threshold) in BY_COUNT.items():
+        bg = f" background: {STRIP};" if count == 10 else ""
+        sizes_text = "、".join(str(n) for n in sizes)
+        rows += f"""
+          <div style="display: grid; {SEAT_TABLE_COLS} gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid {LINE2}; font-size: 13px; color: {INK};{bg}">
+            <span class="mono">{count} 人</span>
+            <span class="mono" style="font-size: 12px; color: {INK2};">P1–P{count}</span>
+            <span style="font-size: 12px; color: {INK2};">{SEAT_TABLE_EXTRA[count]}</span>
+            <span class="mono" style="font-size: 12px;">{sizes_text}</span>
+            <span class="mono" style="font-size: 12px;">{votes} 票</span>
+            <span class="mono" style="font-size: 12px;">{count + 1} 次</span>
+            <span style="font-size: 12px; color: {INK2};">{threshold}</span>
+          </div>"""
+    table_inner = f"""<div style="display: grid; {SEAT_TABLE_COLS} gap: 10px; padding-bottom: 8px; border-bottom: 1px solid {LINE};">{head_cells}</div>
+        {rows}
+        <div style="font-size: 13px; color: {INK2}; line-height: 1.8; padding-top: 4px;">
+          角色构成以五人局的梅林、派西维尔、忠臣、莫甘娜、刺客为底逐级追加，管理员只选人数，不逐张挑身份牌。
+          梅林看不到莫德雷德、能看到奥伯伦，奥伯伦不知同伴、同伴也不知他；这两条在座位卡的"开局所知"一行里直接写出来。
+        </div>"""
+    table = _panel("各人数的规则表", "与 docs/rules.md 第三、四、七节一致", table_inner)
+
+    body = title_bar + f"""
+  <div style="box-sizing: border-box; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 20px;">
+    {layout}
+    {parallel}
+    {table}
+  </div>"""
+    return page(body, 1460)
 
 
 # ================================================================ 输出
@@ -1170,6 +1308,7 @@ SCREENS = {
     "Assassination.dc.html": screen_assassination,
     "GameOver.dc.html": screen_game_over,
     "PlayerThread.dc.html": screen_player_thread,
+    "SeatLayout.dc.html": screen_seat_layout,
 }
 
 if __name__ == "__main__":

@@ -33,8 +33,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from avalon.config import ConfigError
-from avalon.rules import PLAYER_IDS
-from avalon.web.manager import DOWNLOADABLE, GAME_ID_RE, TERMINAL_STATUSES, GameManager, NewGameParams, now_iso
+from avalon.rules import MAX_PLAYERS, MIN_PLAYERS, DEFAULT_PLAYERS
+from avalon.web.manager import ALL_SEATS, DOWNLOADABLE, GAME_ID_RE, TERMINAL_STATUSES, GameManager, NewGameParams, now_iso
 
 STATIC_DIR = Path(__file__).parent / "static"
 HEARTBEAT_S = 15.0
@@ -47,6 +47,7 @@ class NewGameBody(BaseModel):
     model: str = Field(default="", max_length=80)
     random_players: bool = False
     random_delay_s: float = Field(default=1.5, ge=0, le=60)
+    players: int = Field(default=DEFAULT_PLAYERS, ge=MIN_PLAYERS, le=MAX_PLAYERS)
     count: int = Field(default=1, ge=1, le=50)
 
 
@@ -128,6 +129,7 @@ def create_app(manager: GameManager, *, heartbeat_s: float = HEARTBEAT_S) -> Fas
             model=body.model.strip(),
             random_players=body.random_players,
             random_delay_s=body.random_delay_s,
+            players=body.players,
             count=body.count,
         )
         try:
@@ -170,9 +172,11 @@ def create_app(manager: GameManager, *, heartbeat_s: float = HEARTBEAT_S) -> Fas
 
     @app.get("/api/games/{game_id}/players/{pid}")
     def player_thread(game_id: str, pid: str) -> dict[str, Any]:
-        if pid not in PLAYER_IDS:
+        if pid not in ALL_SEATS:
             raise HTTPException(404, "没有这个座位")
         summary = summary_or_404(game_id)
+        if pid not in manager.seats_of(game_id):
+            raise HTTPException(404, "这一局没有这个座位")
         messages = manager.player_thread(game_id, pid)
         return {"game": summary, "player": pid, "messages": messages or []}
 
@@ -180,6 +184,8 @@ def create_app(manager: GameManager, *, heartbeat_s: float = HEARTBEAT_S) -> Fas
     def get_file(game_id: str, name: str, download: int = 0) -> FileResponse:
         if name not in DOWNLOADABLE:
             raise HTTPException(404, "没有这个文件")
+        if name.startswith("players/") and name.removeprefix("players/").removesuffix(".json") not in manager.seats_of(valid_id(game_id)):
+            raise HTTPException(404, "这一局没有这个座位")
         path = manager.file(valid_id(game_id), name)
         if path is None:
             raise HTTPException(404, "文件尚未生成")

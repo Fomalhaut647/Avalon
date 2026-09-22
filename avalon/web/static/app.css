@@ -108,7 +108,7 @@ p { margin: 0; }
 .lobby { grid-template-columns: minmax(0, 1fr) 320px; }
 
 /* 座位卡 */
-.seats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.seats { display: grid; grid-template-columns: repeat(var(--seat-cols, 5), minmax(0, 1fr)); gap: 12px; }
 .seat { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; cursor: pointer; }
 .seat:hover { border-color: var(--ink3); }
 .seat.hl { border: 2px solid var(--ink); padding: 13px 15px; }

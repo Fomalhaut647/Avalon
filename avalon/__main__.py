@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 from avalon.config import Config, ConfigError, load_config
+from avalon.rules import MAX_PLAYERS, MIN_PLAYERS, check_player_count
 from avalon.player import build_players
 from avalon.recorder import Recorder
 from avalon.referee import Referee
@@ -27,11 +28,16 @@ def new_game_id() -> str:
 def play(args: argparse.Namespace) -> None:
     seed = args.seed if args.seed is not None else secrets.randbelow(2**31)
     games_dir = Path(args.games_dir)
+    try:
+        check_player_count(args.players)
+    except ValueError as e:
+        print(f"参数错误：{e}", file=sys.stderr)
+        sys.exit(2)
     if args.random_players:
-        config = Config(api_key="", model="random", seed=seed, games_dir=games_dir, parallel=False)
+        config = Config(api_key="", model="random", seed=seed, players=args.players, games_dir=games_dir, parallel=False)
     else:
         try:
-            config = load_config(seed, games_dir, parallel=not args.sequential)
+            config = load_config(seed, games_dir, parallel=not args.sequential, players=args.players)
         except ConfigError as e:
             print(f"配置错误：{e}", file=sys.stderr)
             sys.exit(2)
@@ -42,7 +48,7 @@ def play(args: argparse.Namespace) -> None:
     players = build_players(config, rng, args.random_players)
 
     mode = "随机玩家" if args.random_players else f"模型 {config.model}，隐藏思考{'开' if config.thinking else '关'}"
-    print(f"对局 {game_id}  种子 {seed}  {mode}  目录 {recorder.game_dir}")
+    print(f"对局 {game_id}  {config.players} 人  种子 {seed}  {mode}  目录 {recorder.game_dir}")
 
     def on_public(text: str) -> None:
         print(text, flush=True)
@@ -78,8 +84,11 @@ def serve(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="avalon", description="五个 AI 玩家的阿瓦隆：终端跑一局，或启动网页裁判席")
+    parser = argparse.ArgumentParser(prog="avalon", description="五到十个 AI 玩家的阿瓦隆：终端跑一局，或启动网页裁判席")
     parser.add_argument("--seed", type=int, default=None, help="随机种子，控制角色分配与队长随机")
+    parser.add_argument(
+        "--players", type=int, default=5, help=f"本局人数，{MIN_PLAYERS} 到 {MAX_PLAYERS}，默认 5"
+    )
     parser.add_argument("--games-dir", default="games", help="对局产物目录")
     parser.add_argument("--random-players", action="store_true", help="用随机玩家跑一局，不联网，用于自检")
     parser.add_argument("--sequential", action="store_true", help="投票等同时行动改为依次请求，不并发")

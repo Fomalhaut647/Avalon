@@ -111,7 +111,7 @@ function computeStats(games) {
   };
 }
 
-const formDefaults = { seed: "", model: "", thinking: false, random: false, count: 1 };
+const formDefaults = { seed: "", model: "", thinking: false, random: false, players: 5, count: 1 };
 let lobbyForm = { ...formDefaults };
 
 function lobbyView() {
@@ -122,7 +122,7 @@ function lobbyView() {
   api("/api/config").then((cfg) => {
     st.config = cfg;
     if (!st.form.model) st.form.model = cfg.model;
-    if (!st.form.touched) { st.form.thinking = !!cfg.thinking; if (cfg.api_key_present === false) st.form.random = true; }
+    if (!st.form.touched) { st.form.thinking = !!cfg.thinking; st.form.players = cfg.player_count || 5; if (cfg.api_key_present === false) st.form.random = true; }
     draw();
   }).catch((e) => { st.error = e.message; draw(); });
   const open = () => {
@@ -147,10 +147,10 @@ function lobbyView() {
     else if (act === "focus-form") { const f = document.querySelector(".form input"); if (f) f.focus(); }
     else if (act === "toggle-form") { st.form.touched = true; st.form[arg] = !st.form[arg]; if (arg === "random" && st.form.random) st.form.thinking = false; draw(); }
   };
-  const onInput = (el) => { const k = el.dataset.form; if (k) { st.form.touched = true; st.form[k] = el.value; } };
+  const onInput = (el) => { const k = el.dataset.form; if (k) { st.form.touched = true; st.form[k] = el.value; if (k === "players") draw(); } };
   const onSubmit = async () => {
     st.error = null; st.creating = true; draw();
-    const body = { seed: st.form.seed === "" ? null : Number(st.form.seed), thinking: !!st.form.thinking, model: st.form.model || "", random_players: !!st.form.random, random_delay_s: 1.5, count: Math.max(1, Number(st.form.count) || 1) };
+    const body = { seed: st.form.seed === "" ? null : Number(st.form.seed), thinking: !!st.form.thinking, model: st.form.model || "", random_players: !!st.form.random, random_delay_s: 1.5, players: Number(st.form.players) || 5, count: Math.max(1, Number(st.form.count) || 1) };
     if (st.form.seed !== "" && !Number.isInteger(body.seed)) { st.error = "种子必须是整数"; st.creating = false; draw(); return; }
     try {
       const d = await api("/api/games", { method: "POST", body: JSON.stringify(body) });
@@ -267,7 +267,7 @@ function gameView(id) {
     else if (act === "play") { st.playing = !st.playing; if (st.playing) { player = setInterval(() => { if (!st.replaying) { stopPlayer(); st.playing = false; return; } if (st.stepIndex >= st.steps.length) { stopPlayer(); st.playing = false; draw(); return; } const target = st.steps[st.stepIndex]; st.cursor = target.end; draw(); }, Number(settings.replaySpeed) * 1000); } else stopPlayer(); draw(); }
     else if (act === "again") {
       const s = st.summary;
-      api("/api/games", { method: "POST", body: JSON.stringify({ seed: s.seed, thinking: !!s.thinking, model: s.random_players ? "" : s.model, random_players: !!s.random_players, random_delay_s: 1.5, count: 1 }) })
+      api("/api/games", { method: "POST", body: JSON.stringify({ seed: s.seed, thinking: !!s.thinking, model: s.random_players ? "" : s.model, random_players: !!s.random_players, random_delay_s: 1.5, players: s.player_count || 5, count: 1 }) })
         .then((d) => { location.hash = `#/g/${d.ids[0]}`; }).catch((e) => toast(e.message, true));
     }
   };

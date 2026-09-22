@@ -19,7 +19,7 @@ from enum import Enum
 from avalon.config import Config
 from avalon.control import CallCancelled
 from avalon.llm import LLMClient, LLMResult
-from avalon.rules import PLAYER_IDS
+from avalon.rules import player_ids
 
 
 class Action(str, Enum):
@@ -153,9 +153,9 @@ class RandomPlayer(Player):
 
 
 def build_players(config: Config, rng: random.Random, random_players: bool, random_delay_s: float = 0.0) -> dict[str, Player]:
-    """按配置装配五个座位：真实模型玩家，或不联网的随机玩家。"""
+    """按本局人数装配座位：真实模型玩家，或不联网的随机玩家。"""
     players: dict[str, Player] = {}
-    for pid in PLAYER_IDS:
+    for pid in player_ids(config.players):
         if random_players:
             players[pid] = RandomPlayer(pid, random.Random(rng.randrange(2**31)), delay_s=random_delay_s)
         else:

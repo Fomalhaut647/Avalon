@@ -4,6 +4,9 @@
 对局列表合并两处来源：本进程里的对局（含排队中的）与 games/ 目录里已落盘的对局；
 同一局两处都有时以本进程为准。
 
+命名约定：`players` 只用于座位名单（`game_start` 事件与 `public.json`）；人数一律叫 `player_count`。
+新开一局的请求体沿用 `players` 表示人数，见 `server.py`。
+
 状态取值：
 - queued       排队等待开始（尚未建目录）
 - running / pausing / paused / terminating   见 control.py
@@ -34,12 +37,14 @@ from avalon.control import PAUSING, GameAborted, GameControl
 from avalon.player import build_players
 from avalon.recorder import Recorder, paused_seconds
 from avalon.referee import Referee
-from avalon.rules import PLAYER_IDS
+from avalon.rules import DEFAULT_PLAYERS, MAX_PLAYERS, MIN_PLAYERS, player_ids
 
 LIVE_STATUSES = ("running", "pausing", "paused", "terminating")
 TERMINAL_STATUSES = ("finished", "terminated", "error", "interrupted")
 GAME_ID_RE = re.compile(r"^\d{8}-\d{4}-[0-9a-f]{4}$")
-DOWNLOADABLE = ("transcript.md", "events.jsonl", "public.json", "result.json", *(f"players/{pid}.json" for pid in PLAYER_IDS))
+ALL_SEATS = tuple(f"P{i}" for i in range(1, MAX_PLAYERS + 1))
+"""接口认得的全部座位编号。某一局只放行它实际有的那几个。"""
+DOWNLOADABLE = ("transcript.md", "events.jsonl", "public.json", "result.json", *(f"players/{pid}.json" for pid in ALL_SEATS))
 CONTROL_EVENTS = {"pausing": "pause_requested", "paused": "paused", "running": "resumed", "terminating": "terminate_requested"}
 
 
@@ -61,6 +66,8 @@ class NewGameParams:
     """不联网的随机玩家，用于试界面。"""
     random_delay_s: float = 1.5
     """随机玩家每次行动模拟的思考秒数。"""
+    players: int = DEFAULT_PLAYERS
+    """每局人数，5 到 10。"""
     count: int = 1
 
 
@@ -119,7 +126,7 @@ class GameRun:
         state = self.referee.state
         self.recorder.save_public(state)
         self.recorder.save_result(state, status=status, error=error)
-        for pid in PLAYER_IDS:
+        for pid in player_ids(self.config.players):
             messages = self.referee.players[pid].messages
             if messages:
                 self.recorder.save_thread(pid, messages)
@@ -210,6 +217,7 @@ class GameRun:
             "id": self.id,
             "seed": self.config.seed,
             "status": self.status,
+            "player_count": self.config.players,
             "model": self.config.model,
             "thinking": self.config.thinking,
             "random_players": self.params.random_players,
@@ -280,10 +288,12 @@ def summary_from_disk(game_dir: Path) -> dict[str, Any] | None:
     current = quests[-1] if quests else None
     proposal = current["proposals"][-1] if current and current.get("proposals") else None
     status = result.get("status") or ("finished" if result else "interrupted")
+    seats = first.get("players") or public.get("players") or []
     return {
         "id": game_dir.name,
         "seed": first.get("seed", result.get("seed")),
         "status": status,
+        "player_count": len(seats) or DEFAULT_PLAYERS,
         "model": model or "?",
         "thinking": first.get("thinking", result.get("thinking")),
         "random_players": model == "random",
@@ -338,6 +348,9 @@ class GameManager:
         return {
             "model": model,
             "thinking": thinking,
+            "player_count": DEFAULT_PLAYERS,
+            "min_player_count": MIN_PLAYERS,
+            "max_player_count": MAX_PLAYERS,
             "api_key_present": api_key_present,
             "known_models": sorted(PRICES_CNY_PER_MILLION),
             "max_concurrent": self.max_concurrent,
@@ -348,9 +361,9 @@ class GameManager:
     def create(self, params: NewGameParams) -> list[str]:
         """建 count 局并尽量立刻开始，返回局号。真实模型缺 API key 时抛 ConfigError。"""
         if params.random_players:
-            base = Config(api_key="", model="random", seed=0, games_dir=self.games_dir, parallel=True)
+            base = Config(api_key="", model="random", seed=0, players=params.players, games_dir=self.games_dir, parallel=True)
         else:
-            base = load_config(0, self.games_dir)
+            base = load_config(0, self.games_dir, players=params.players)
             base = replace(base, model=params.model or base.model, seat_models={}, thinking=params.thinking)
         ids: list[str] = []
         with self._lock:
@@ -486,6 +499,11 @@ class GameManager:
                 if i >= since and line.strip():
                     out.append(json.loads(line))
         return out
+
+    def seats_of(self, game_id: str) -> tuple[str, ...]:
+        """这一局实际有的座位。落盘的旧局没有座位名单时按 5 人。"""
+        summary = self.summary(game_id)
+        return player_ids(summary["player_count"]) if summary else ()
 
     def player_thread(self, game_id: str, pid: str) -> list[dict[str, str]] | None:
         run = self.runs.get(game_id)

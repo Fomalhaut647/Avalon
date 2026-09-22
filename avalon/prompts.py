@@ -11,15 +11,20 @@ import re
 from avalon.player import Action, Notice, Reply
 from avalon.rules import (
     MAX_PROPOSALS_PER_QUEST,
-    PLAYER_IDS,
-    QUEST_SIZES,
-    VOTES_TO_APPROVE,
     WINS_NEEDED,
     HiddenInfo,
     Role,
     Side,
+    fails_to_fail_quest,
+    player_ids,
+    quest_sizes,
+    role_counts,
+    roles_for,
+    seat_count,
     side_of,
+    votes_to_approve,
 )
+from avalon.rules import HIDDEN_FROM_MERLIN, MUTUALLY_KNOWN_EVIL
 from avalon.state import GameState
 
 MARK_PRIVATE = "【私下分析】"
@@ -31,12 +36,26 @@ MARK_ASSASSINATE = "【刺杀】"
 
 ALL_MARKS = (MARK_PRIVATE, MARK_SPEECH, MARK_TEAM, MARK_VOTE, MARK_QUEST, MARK_ASSASSINATE)
 
+ROLE_SHORT_ZH: dict[Role, str] = {
+    Role.MERLIN: "梅林",
+    Role.PERCIVAL: "派西维尔",
+    Role.LOYAL_SERVANT: "忠臣",
+    Role.MORGANA: "莫甘娜",
+    Role.ASSASSIN: "刺客",
+    Role.OBERON: "奥伯伦",
+    Role.MINION: "爪牙",
+    Role.MORDRED: "莫德雷德",
+}
+
 ROLE_NAMES_ZH: dict[Role, str] = {
     Role.MERLIN: "梅林（Merlin）",
     Role.PERCIVAL: "派西维尔（Percival）",
     Role.LOYAL_SERVANT: "忠臣（Loyal Servant）",
     Role.MORGANA: "莫甘娜（Morgana）",
     Role.ASSASSIN: "刺客（Assassin）",
+    Role.OBERON: "奥伯伦（Oberon）",
+    Role.MINION: "爪牙（Minion）",
+    Role.MORDRED: "莫德雷德（Mordred）",
 }
 
 SIDE_NAMES_ZH: dict[Side, str] = {Side.GOOD: "好人", Side.EVIL: "邪恶"}
@@ -47,17 +66,76 @@ FALLBACK_SPEECH = "（{pid} 本次弃权）"
 # ---------------------------------------------------------------- system prompt
 
 
-def _hidden_info_text(role: Role, hidden: HiddenInfo) -> str:
+def _join_and(items: tuple[str, ...] | list[str]) -> str:
+    """把座位编号连成"P2 和 P5"或"P2、P5 和 P7"。"""
+    items = list(items)
+    if not items:
+        return "（无）"
+    if len(items) == 1:
+        return items[0]
+    return "、".join(items[:-1]) + " 和 " + items[-1]
+
+
+def _roster_text(players: int) -> str:
+    """本局角色构成，好人与邪恶分列，重复的角色写明几名。"""
+    counts = role_counts(players)
+
+    def part(side: Side) -> str:
+        names = [f"{ROLE_SHORT_ZH[r]}{f' {n} 名' if n > 1 else ''}" for r, n in counts.items() if side_of(r) == side]
+        return "、".join(names)
+
+    return f"角色共 {players} 个，每人一个：好人阵营是{part(Side.GOOD)}；邪恶阵营是{part(Side.EVIL)}。"
+
+
+def _role_rules_text(players: int) -> str:
+    """本局在场角色各自的信息规则。不在场的角色不提。"""
+    present = set(roles_for(players))
+    unseen = [r for r in HIDDEN_FROM_MERLIN if r in present]
+    lines = []
+    if unseen:
+        hidden_names = "、".join(ROLE_SHORT_ZH[r] for r in unseen)
+        lines.append(f"- 梅林开局知道哪些人属于邪恶阵营，但看不到{hidden_names}，也不知道看到的人各自是什么角色。")
+    else:
+        lines.append("- 梅林开局知道全部邪恶玩家是谁，但不知道他们各自是什么角色。")
+    lines.append("- 派西维尔开局知道两个人，其中一人是梅林、一人是莫甘娜，不知道谁是谁。")
+    lines.append("- 忠臣没有任何隐藏信息。")
+    known = [ROLE_SHORT_ZH[r] for r in MUTUALLY_KNOWN_EVIL if r in present]
+    lines.append(f"- {'、'.join(known)}彼此知道对方是谁。")
+    if Role.OBERON in present:
+        lines.append("- 奥伯伦属于邪恶阵营，但他不知道任何同伴，其他邪恶玩家也不知道他；梅林能看到他。")
+    return "\n".join(lines)
+
+
+def _fail_rule_text(players: int) -> str:
+    special = [i for i in range(1, 6) if fails_to_fail_quest(players, i) > 1]
+    if not special:
+        return "出现 1 张失败牌任务即失败。"
+    which = "、".join(f"第 {i} 次" for i in special)
+    need = fails_to_fail_quest(players, special[0])
+    return f"出现 1 张失败牌任务即失败；但{which}任务是例外，需要 {need} 张失败牌才失败。"
+
+
+def _hidden_info_text(role: Role, hidden: HiddenInfo, players: int) -> str:
+    present = set(roles_for(players))
     if role == Role.MERLIN:
-        a, b = hidden.evil_players
-        return f"你知道邪恶阵营的两人是 {a} 和 {b}。其中一人是莫甘娜、一人是刺客，你不知道谁是谁。"
+        seen = _join_and(hidden.evil_players)
+        text = f"你知道邪恶阵营的 {len(hidden.evil_players)} 人是 {seen}，但不知道他们各自是什么角色。"
+        blind = [ROLE_SHORT_ZH[r] for r in HIDDEN_FROM_MERLIN if r in present]
+        if blind:
+            text += f" 本局还有{'、'.join(blind)}，同样属于邪恶阵营，但你看不到他，邪恶阵营的人数比你看到的多。"
+        return text
     if role == Role.PERCIVAL:
         a, b = hidden.merlin_or_morgana
         return f"你知道 {a} 和 {b} 之中一人是梅林、一人是莫甘娜，但不知道谁是谁。"
-    if role == Role.MORGANA:
-        return f"你的邪恶同伴是 {hidden.fellow_evil}，对方是刺客。其余三人都是好人。"
-    if role == Role.ASSASSIN:
-        return f"你的邪恶同伴是 {hidden.fellow_evil}，对方是莫甘娜。其余三人都是好人。"
+    if role == Role.OBERON:
+        return "你属于邪恶阵营，但你不知道任何同伴，其他邪恶玩家也不知道你；梅林能看到你。你只能靠公开信息判断谁和你同一阵营。"
+    if role in MUTUALLY_KNOWN_EVIL:
+        text = f"你的邪恶同伴是 {_join_and(hidden.fellow_evils)}，你们互相知道身份。"
+        if Role.OBERON in present:
+            text += " 本局还有奥伯伦，他也属于邪恶阵营，但你不知道他是谁，他也不知道你。"
+        if role == Role.MORDRED:
+            text += " 梅林看不到你。"
+        return text
     return "你没有任何隐藏信息，只能依靠公开发言、队伍、投票和任务结果推理。"
 
 
@@ -72,6 +150,10 @@ def _goal_text(role: Role) -> str:
         goal += " 在派西维尔眼中你与梅林无法区分，可以伪装成梅林误导好人。"
     if role == Role.ASSASSIN:
         goal += " 局末若好人 3 胜，由你独自指定刺杀目标，请全程留意谁最像梅林。"
+    if role == Role.MORDRED:
+        goal += " 梅林看不到你，你可以放心地装成好人，甚至带头指认别人。"
+    if role == Role.OBERON:
+        goal += " 你和同伴互不相认，容易误伤，出牌和投票前先想清楚队伍里还有没有别的邪恶。"
     return goal
 
 
@@ -88,29 +170,28 @@ def _format_lines(role: Role) -> str:
     return "\n".join(lines)
 
 
-def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
-    """规则摘要、座位、角色、隐藏信息、阵营目标、输出格式、发言风格要求。"""
-    sizes = "、".join(str(n) for n in QUEST_SIZES)
-    return f"""你正在参加一局五人阿瓦隆桌游。五名玩家全部由 AI 扮演，座位编号 P1 到 P5，顺时针排列，P5 的下一位是 P1。你是 {player_id}。
+def system_prompt(player_id: str, role: Role, hidden: HiddenInfo, players: int) -> str:
+    """规则摘要、座位、角色、隐藏信息、阵营目标、输出格式、发言风格要求。全部按本局人数生成。"""
+    last = f"P{players}"
+    sizes = "、".join(str(n) for n in quest_sizes(players))
+    approve = votes_to_approve(players)
+    return f"""你正在参加一局 {players} 人阿瓦隆桌游。{players} 名玩家全部由 AI 扮演，座位编号 P1 到 {last}，顺时针排列，{last} 的下一位是 P1。你是 {player_id}。
 
 # 规则
 
-角色共五个，每人一个：好人阵营是梅林、派西维尔、忠臣；邪恶阵营是莫甘娜、刺客。
-- 梅林开局知道两名邪恶玩家是谁，但不知道谁是莫甘娜、谁是刺客。
-- 派西维尔开局知道两个人，其中一人是梅林、一人是莫甘娜，不知道谁是谁。
-- 忠臣没有任何隐藏信息。
-- 莫甘娜与刺客彼此知道对方是谁。
+{_roster_text(players)}
+{_role_rules_text(players)}
 
 一局最多 5 次任务，第 1 到第 5 次任务的队伍人数依次为 {sizes}。任一阵营先达到 {WINS_NEEDED} 次即分出胜负。
 
 每次任务的流程：
 1. 队长按座位顺时针轮转：开局由裁判随机指定第一任队长，此后每次提案结束，无论通过还是否决，队长都换给下一位。
-2. 队长先发言一次；然后从队长的下一位开始顺时针，其余四人各发言一次；最后回到队长做总结发言，并在同一次行动中指派队伍。每次只有一人发言，发言者能看到此前全部公开内容。
-3. 全体五人同时对队伍投赞成或反对，不发言。赞成达到 {VOTES_TO_APPROVE} 票则通过。
-4. 通过：队伍成员各自私下出一张任务牌。好人只能出成功；邪恶可以出成功或失败。出现 1 张失败牌任务即失败。裁判公布任务成败与失败牌张数，不公布出自谁。
+2. 队长先发言一次；然后从队长的下一位开始顺时针，其余 {players - 1} 人各发言一次；最后回到队长做总结发言，并在同一次行动中指派队伍。每次只有一人发言，发言者能看到此前全部公开内容。
+3. 全体 {players} 人同时对队伍投赞成或反对，不发言。赞成达到 {approve} 票则通过，不足则否决，平票也是否决。
+4. 通过：队伍成员各自私下出一张任务牌。好人只能出成功；邪恶可以出成功或失败。{_fail_rule_text(players)}裁判公布任务成败与失败牌张数，不公布出自谁。
 5. 否决：队长换下一位，回到第 2 步。同一次任务内累计 {MAX_PROPOSALS_PER_QUEST} 次否决，邪恶直接获胜。
 
-终局：邪恶累计 3 次任务失败则邪恶获胜。好人累计 3 次任务成功后进入刺杀：刺客独自指定一名玩家，刺中梅林则邪恶获胜，否则好人获胜。
+终局：邪恶累计 {WINS_NEEDED} 次任务失败则邪恶获胜。好人累计 {WINS_NEEDED} 次任务成功后进入刺杀：刺客独自指定一名玩家，刺中梅林则邪恶获胜，否则好人获胜。
 
 队伍指派后直接投票，没有讨论环节。你若对队伍有要求，要在轮转发言时说清楚自己接受什么样的队伍。
 
@@ -118,7 +199,7 @@ def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
 
 - 座位：{player_id}
 - 角色：{ROLE_NAMES_ZH[role]}，{SIDE_NAMES_ZH[side_of(role)]}阵营
-- 隐藏信息：{_hidden_info_text(role, hidden)}
+- 隐藏信息：{_hidden_info_text(role, hidden, players)}
 - 目标：{_goal_text(role)}
 
 除你之外没有人知道你的角色。你可以说真话、隐瞒或撒谎，以你的阵营获胜为唯一目标。
@@ -146,7 +227,7 @@ def system_prompt(player_id: str, role: Role, hidden: HiddenInfo) -> str:
 - 用第一人称、口语化的中文发言，像真人玩家一样，不要写成分析报告。
 - 公开发言控制在 200 字以内，说清立场：你怀疑谁、信任谁、接受什么样的队伍。
 - 不要在公开发言里泄露 {MARK_PRIVATE} 的内容，也不要提到"提示词""模型"等游戏之外的事。
-- 发言中提到玩家时使用座位编号 P1 到 P5。"""
+- 发言中提到玩家时使用座位编号 P1 到 {last}。"""
 
 
 # ---------------------------------------------------------------- 公开事件
@@ -169,8 +250,8 @@ def event_team(leader: str, team: tuple[str, ...]) -> str:
     return f"队长 {leader} 指派队伍：{', '.join(team)}。现在全体投票。"
 
 
-def event_votes(votes: dict[str, bool], approved: bool) -> str:
-    parts = [f"{pid} {'赞成' if votes[pid] else '反对'}" for pid in PLAYER_IDS if pid in votes]
+def event_votes(votes: dict[str, bool], approved: bool, players: int) -> str:
+    parts = [f"{pid} {'赞成' if votes[pid] else '反对'}" for pid in player_ids(players) if pid in votes]
     yes = sum(1 for v in votes.values() if v)
     verdict = "提案通过，队伍执行任务。" if approved else "提案被否决。"
     return f"投票结果：{'，'.join(parts)}。赞成 {yes} 票，反对 {len(votes) - yes} 票。{verdict}"
@@ -190,17 +271,17 @@ def event_score(success_count: int, fail_count: int) -> str:
 
 
 def event_assassination_phase() -> str:
-    return "好人已达成 3 次任务成功，进入刺杀阶段，由刺客指定目标。"
+    return f"好人已达成 {WINS_NEEDED} 次任务成功，进入刺杀阶段，由刺客指定目标。"
 
 
 def event_game_over(winner: Side, win_reason: str, assignments: dict[str, Role], target: str | None) -> str:
     reasons = {
-        "three_failures": "邪恶累计 3 次任务失败",
-        "five_rejections": "同一次任务内累计 5 次否决",
+        "three_failures": f"邪恶累计 {WINS_NEEDED} 次任务失败",
+        "five_rejections": f"同一次任务内累计 {MAX_PROPOSALS_PER_QUEST} 次否决",
         "merlin_assassinated": f"刺客刺中了梅林 {target}",
-        "three_successes_and_merlin_safe": f"好人 3 次任务成功，刺客刺杀 {target} 未中梅林",
+        "three_successes_and_merlin_safe": f"好人 {WINS_NEEDED} 次任务成功，刺客刺杀 {target} 未中梅林",
     }
-    roles = "，".join(f"{pid} 是{ROLE_NAMES_ZH[assignments[pid]]}" for pid in PLAYER_IDS)
+    roles = "，".join(f"{pid} 是{ROLE_NAMES_ZH[assignments[pid]]}" for pid in player_ids(seat_count(assignments)))
     return f"游戏结束：{SIDE_NAMES_ZH[winner]}阵营获胜，原因是{reasons.get(win_reason, win_reason)}。角色公布：{roles}。"
 
 
@@ -208,6 +289,7 @@ def event_game_over(winner: Side, win_reason: str, assignments: dict[str, Role],
 
 
 def render_scoreboard(state: GameState) -> str:
+    ids = player_ids(state.players)
     lines: list[str] = []
     if state.quests:
         q = state.current_quest
@@ -217,14 +299,15 @@ def render_scoreboard(state: GameState) -> str:
             head += f"，第 {p.index} 次提案，队长 {p.leader}，本次任务已否决 {q.rejections} 次"
         lines.append(head)
     lines.append(f"比分：好人 {state.success_count} 胜，邪恶 {state.fail_count} 胜（先到 {WINS_NEEDED} 胜）")
-    lines.append("任务人数：" + "、".join(f"第{i + 1}次 {n} 人" for i, n in enumerate(QUEST_SIZES)))
+    lines.append("任务人数：" + "、".join(f"第{i + 1}次 {n} 人" for i, n in enumerate(quest_sizes(state.players))))
+    lines.append(f"提案通过需要 {votes_to_approve(state.players)} 票赞成（全场 {state.players} 人）")
     history: list[str] = []
     for q in state.quests:
         for p in q.proposals:
             if p.approved is None:
                 continue
-            yes = [pid for pid in PLAYER_IDS if p.votes.get(pid) is True]
-            no = [pid for pid in PLAYER_IDS if p.votes.get(pid) is False]
+            yes = [pid for pid in ids if p.votes.get(pid) is True]
+            no = [pid for pid in ids if p.votes.get(pid) is False]
             verdict = "通过" if p.approved else "否决"
             history.append(
                 f"- 任务 {q.index} 提案 {p.index}：队长 {p.leader}，队伍 {', '.join(p.team)}；"
@@ -250,6 +333,7 @@ def instruction(
     candidates: tuple[str, ...] = (),
     team: tuple[str, ...] = (),
     is_leader: bool = False,
+    fails_needed: int = 1,
 ) -> str:
     if action == Action.SPEAK:
         who = "你是本次提案的队长，请先发言" if is_leader else "轮到你发言"
@@ -271,12 +355,12 @@ def instruction(
     if action == Action.EXECUTE_QUEST:
         return (
             f"你在本次任务的队伍 {', '.join(team)} 中。请私下出一张任务牌。"
-            f"你是邪恶阵营，可以出成功或失败；出现 1 张失败牌任务即失败，裁判只公布失败牌张数。\n"
+            f"你是邪恶阵营，可以出成功或失败；本次任务出现 {fails_needed} 张失败牌即失败，裁判只公布失败牌张数。\n"
             f"输出：{MARK_PRIVATE} 和 {MARK_QUEST} 两段，{MARK_QUEST} 后只写\"成功\"或\"失败\"。"
         )
     if action == Action.ASSASSINATE:
         return (
-            f"好人已达成 3 次任务成功。你是刺客，请在 {', '.join(candidates)} 中指定一人刺杀。"
+            f"好人已达成 {WINS_NEEDED} 次任务成功。你是刺客，请在 {', '.join(candidates)} 中指定一人刺杀。"
             f"刺中梅林则邪恶获胜，否则好人获胜。\n"
             f"输出：{MARK_PRIVATE} 和 {MARK_ASSASSINATE} 两段，{MARK_ASSASSINATE} 后只写一个座位编号。"
         )
@@ -297,7 +381,8 @@ def render_notice(notice: Notice) -> str:
 # ---------------------------------------------------------------- 解析
 
 _MARK_RE = re.compile("|".join(re.escape(m) for m in ALL_MARKS))
-_PID_RE = re.compile(r"P\s*([1-5])")
+_PID_RE = re.compile(r"P\s*(10|[1-9])(?![0-9])")
+"""座位编号，支持 P1 到 P10。先试 10 再试个位，免得 P10 被读成 P1。"""
 
 _APPROVE_WORDS = ("赞成", "同意", "通过", "approve", "yes")
 _REJECT_WORDS = ("反对", "否决", "拒绝", "reject", "no")

@@ -1,7 +1,7 @@
 [project]
 name = "avalon"
 version = "0.1.0"
-description = "五个 AI 玩家对局的阿瓦隆：非 AI 裁判状态机 + 5 个接入 API 的 chatbot 玩家"
+description = "5 到 10 个 AI 玩家对局的阿瓦隆：非 AI 裁判状态机 + 每座一个接入 API 的 chatbot 玩家"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

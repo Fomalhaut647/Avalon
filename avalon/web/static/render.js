@@ -1,6 +1,6 @@
 // 画面渲染：纯函数，输入状态返回 HTML 字符串。交互通过 data-act / data-arg 交给 app.js。
 
-import { PIDS, QUEST_SIZES, STEPS, ACTION_ZH, ACTION_ING, STATUS_ZH, LIVE, TERMINAL, esc, roleZh, sideOf, sideZh, hiddenInfo, winReasonZh, fmtDuration, fmtSecs, fmtTime, fmtDate, fmtCost, fmtInt, fmtTokens, pct, icon, countCn, markdown } from "./util.js";
+import { PLAYER_CHOICES, STEPS, seatColumns, votesToApprove, questSizes, ACTION_ZH, ACTION_ING, STATUS_ZH, LIVE, TERMINAL, esc, roleZh, sideOf, sideZh, hiddenInfo, winReasonZh, fmtDuration, fmtSecs, fmtTime, fmtDate, fmtCost, fmtInt, fmtTokens, pct, icon, countCn, markdown } from "./util.js";
 import { stepIndex, currentQuest, currentProposal, situationTitle, questStates, publicClues, pausedSeconds, askLog, stepIndexAt } from "./reduce.js";
 import { SETTINGS } from "./settings.js";
 
@@ -23,7 +23,7 @@ function avatar(pid, m, size = "", dim = false) {
   return `<div class="avatar ${size} ${side}">${pid}</div>`;
 }
 const nameOf = (pid, m) => `${pid} · ${roleZh(m.assignments[pid])}`;
-function cells(votes, order = PIDS) {
+function cells(votes, order) {
   return `<div class="cells">${order.map((p) => { const v = votes[p]; const k = v === true ? "yes" : v === false ? "no" : "pending pulse"; return `<span class="cell ${k}">${p}</span>`; }).join("")}</div>`;
 }
 const cardChip = (pid, ok) => `<span class="card-chip ${ok == null ? "pending" : ok ? "success" : "fail"} mono">${pid} ${ok == null ? "待出" : ok ? "成功" : "失败"}</span>`;
@@ -129,7 +129,7 @@ export function renderGame(st) {
 function strip(m) {
   const states = questStates(m);
   const labels = { success: "成功", fail: "失败", current: "进行中", upcoming: "未开始" };
-  const circles = states.map((s, i) => `<div class="quest ${s}">${qcircle(s, QUEST_SIZES[i])}<span class="qlabel">${labels[s]}</span></div>`).join("");
+  const circles = states.map((s, i) => `<div class="quest ${s}">${qcircle(s, m.questSizes[i])}<span class="qlabel">${labels[s]}</span></div>`).join("");
   const q = currentQuest(m);
   const over = !!m.over || m.control.terminated || !!m.control.error;
   const rejections = q ? q.proposals.filter((p) => p.approved === false).length : 0;
@@ -191,7 +191,7 @@ function seatTags(pid, m, p, q) {
 
 function seats(st) {
   const m = st.model, p = currentProposal(m), q = currentQuest(m);
-  return `<div class="seats">${PIDS.map((pid) => {
+  return `<div class="seats" style="--seat-cols:${seatColumns(m.players)}">${m.pids.map((pid) => {
     const role = m.assignments[pid];
     const side = sideOf(role);
     const pp = m.perPlayer[pid];
@@ -201,7 +201,7 @@ function seats(st) {
     if (pp.fail) rec.push(`失败 ${pp.fail}`);
     let recHtml = rec.join(" · ");
     if (pp.failCards) recHtml += ` · <span style="color:var(--evil-text);font-weight:500">打出失败牌 ${pp.failCards}</span>`;
-    return `<div class="seat ${hl ? "hl" : ""}" data-act="nav" data-arg="#/g/${st.id}/p/${pid}" title="查看 ${pid} 的完整线程"><div class="row between"><div class="row" style="align-items:baseline"><span class="pid mono">${pid}</span><span class="role">${roleZh(role)}</span></div>${sideChip(side)}</div><div class="hidden-info">${icon("eye", 11, "#9a9184")}${esc(hiddenInfo(pid, m.assignments))}</div><div class="tags">${seatTags(pid, m, p, q).join("")}</div><div class="record">${recHtml}<br><span class="mono">${pp.calls} 次调用 · ${fmtCost(pp.cost)} 元</span></div></div>`;
+    return `<div class="seat ${hl ? "hl" : ""}" data-act="nav" data-arg="#/g/${st.id}/p/${pid}" title="查看 ${pid} 的完整线程"><div class="row between"><div class="row" style="align-items:baseline"><span class="pid mono">${pid}</span><span class="role">${roleZh(role)}</span></div>${sideChip(side)}</div><div class="hidden-info">${icon("eye", 11, "#9a9184")}${esc(hiddenInfo(pid, m.assignments, m.pids))}</div><div class="tags">${seatTags(pid, m, p, q).join("")}</div><div class="record">${recHtml}<br><span class="mono">${pp.calls} 次调用 · ${fmtCost(pp.cost)} 元</span></div></div>`;
   }).join("")}</div>`;
 }
 
@@ -223,14 +223,14 @@ function earlierProposals(q, m, ui) {
   const done = q.proposals.filter((p) => p.stage === "done");
   return done.map((p) => {
     const yes = Object.values(p.votes).filter(Boolean).length;
-    const detail = `队长 ${mono(p.leader)} · 队伍 ${mono(p.team.join(" "))} · ${yes} : ${PIDS.length - yes} 否决`;
-    const inner = proposalDiscussion(p, m, ui, 0, false) + (p.proposeTurn ? eventBlock("提案", `队长 ${p.leader} 提出队伍 ${p.team.join("、")}`, turnMeta(p.proposeTurn), `<p class="text" style="font-size:13px">${esc(p.proposeTurn.speech || "")}</p>${privateBlock(ui, `priv:${p.proposeTurn.seq}`, p.proposeTurn.private)}`) : "") + eventBlock("投票", `${yes} : ${PIDS.length - yes} 否决`, p.votesEvent ? fmtTime(p.votesEvent.ts) : "", voteRows(p, m, ui, 0, false));
+    const detail = `队长 ${mono(p.leader)} · 队伍 ${mono(p.team.join(" "))} · ${yes} : ${m.players - yes} 否决`;
+    const inner = proposalDiscussion(p, m, ui, 0, false) + (p.proposeTurn ? eventBlock("提案", `队长 ${p.leader} 提出队伍 ${p.team.join("、")}`, turnMeta(p.proposeTurn), `<p class="text" style="font-size:13px">${esc(p.proposeTurn.speech || "")}</p>${privateBlock(ui, `priv:${p.proposeTurn.seq}`, p.proposeTurn.private)}`) : "") + eventBlock("投票", `${yes} : ${m.players - yes} 否决`, p.votesEvent ? fmtTime(p.votesEvent.ts) : "", voteRows(p, m, ui, 0, false));
     return collapsedRow(ui, `prop:${q.index}:${p.index}`, `提案 ${p.index}`, detail, inner);
   }).join("");
 }
 function voteRows(p, m, ui, now, live) {
-  const asked = PIDS.filter((pid) => m.pending[pid] && m.pending[pid].action === "vote");
-  return `<div class="col">${PIDS.map((pid) => {
+  const asked = m.pids.filter((pid) => m.pending[pid] && m.pending[pid].action === "vote");
+  return `<div class="col">${m.pids.map((pid) => {
     const t = p.voteTurns[pid];
     const pend = m.pending[pid];
     let mid, right;
@@ -240,7 +240,7 @@ function voteRows(p, m, ui, now, live) {
     else { mid = tag("等待", "wait"); right = ""; }
     const priv = t ? privateBlock(ui, `priv:${t.seq}`, t.private) + reasoningBlock(ui, `reason:${t.seq}`, t) : (live && !p.votesEvent ? `<div class="skeleton" style="width:160px;height:10px"></div>` : "");
     return `<div class="vote-row">${avatar(pid, m, "s")}<span class="name">${nameOf(pid, m)}</span><span>${mid}</span><div>${priv}</div><span class="meta mono">${right}</span></div>`;
-  }).join("")}</div>${asked.length || !p.votesEvent ? `<div class="dim" style="font-size:12px;padding-top:8px">五人同时收到投票通知，回复各自独立；三人赞成即通过，否则否决并把队长换给下一位。</div>` : ""}`;
+  }).join("")}</div>${asked.length || !p.votesEvent ? `<div class="dim" style="font-size:12px;padding-top:8px">${m.players} 人同时收到投票通知，回复各自独立；${votesToApprove(m.players)} 人赞成即通过，否则否决并把队长换给下一位。</div>` : ""}`;
 }
 function proposeBlock(p, m, ui, now, live, active) {
   const q = currentQuest(m);
@@ -299,8 +299,8 @@ function leftColumn(st) {
   out += seats(st);
   const situ = p ? `第 ${q.index} 次任务 · 第 ${p.index} 次提案 · 队长 ${p.leader}` : q ? `第 ${q.index} 次任务` : "";
   if (m.phase === "ASSASSINATION") {
-    const assassin = PIDS.find((pid) => m.assignments[pid] === "Assassin");
-    const candidates = PIDS.filter((pid) => pid !== assassin);
+    const assassin = m.pids.find((pid) => m.assignments[pid] === "Assassin");
+    const candidates = m.pids.filter((pid) => pid !== assassin);
     const goods = candidates.filter((pid) => sideOf(m.assignments[pid]) === "good");
     const pend = m.pending[assassin];
     const intro = `<div class="note">好人在第 ${q ? q.index : "?"} 次任务后达成 3 次成功。裁判向刺客 ${assassin} 发出刺杀通知：从 ${candidates.join("、")} 中选择一人，刺中梅林则邪恶反胜，否则好人获胜。</div>`;
@@ -314,7 +314,7 @@ function leftColumn(st) {
   const prevQuest = m.quests[m.quests.length - 2];
   const prevRow = prevQuest && prevQuest.resultEvent && !p.speeches.length && p.index === 1 ? collapsedRow(ui, `prevq:${q.index}`, "上次结算", `第 ${prevQuest.index} 次任务${prevQuest.succeeded ? "成功" : "失败"}${prevQuest.failCount ? ` · ${prevQuest.failCount} 张失败牌` : ""} · 比分 好人 ${m.successCount} : 邪恶 ${m.failCount}`, resultBlock(prevQuest, m, false, p.leader)) : "";
   if (p.stage === "discussion") {
-    out += panel("本轮讨论", `${situ} · 从队长 ${p.leader} 起顺时针发言`, `${p.speeches.length} / ${PIDS.length} 已发言`, prevRow + earlier + proposalDiscussion(p, m, ui, now, live) + controlNotes(m));
+    out += panel("本轮讨论", `${situ} · 从队长 ${p.leader} 起顺时针发言`, `${p.speeches.length} / ${m.players} 已发言`, prevRow + earlier + proposalDiscussion(p, m, ui, now, live) + controlNotes(m));
     return out;
   }
   const disc = collapsedRow(ui, `disc:${q.index}:${p.index}`, "讨论", `${p.speeches.length} 条发言 · 队长 ${p.leader} 起顺时针`, proposalDiscussion(p, m, ui, now, false));
@@ -322,15 +322,15 @@ function leftColumn(st) {
   const yes = Object.values(p.votes).filter(Boolean).length, got = Object.keys(p.voteTurns).length;
   body += proposeBlock(p, m, ui, now, live, p.stage === "proposal");
   if (p.stage !== "proposal") {
-    const vmeta = p.votesEvent ? `${fmtTime(p.votesEvent.ts)} · 5 人并行` : `已收到 ${got} / 5`;
-    const vtitle = p.votesEvent ? `${yes} : ${PIDS.length - yes} ${p.approved ? "通过" : "否决"}` : "全体投票";
-    const vinner = p.votesEvent && p.stage !== "voting" ? `<div class="row" style="gap:14px">${cells(p.votes)}<span style="font-size:12px;color:var(--ink2)">${PIDS.filter((pid) => p.votes[pid] === false).join("、") || "无人"}反对</span></div>${collapsedRow(ui, `votes:${q.index}:${p.index}`, "明细", "每人的投票与私下分析", voteRows(p, m, ui, now, false))}` : voteRows(p, m, ui, now, live);
+    const vmeta = p.votesEvent ? `${fmtTime(p.votesEvent.ts)} · ${m.players} 人并行` : `已收到 ${got} / ${m.players}`;
+    const vtitle = p.votesEvent ? `${yes} : ${m.players - yes} ${p.approved ? "通过" : "否决"}` : "全体投票";
+    const vinner = p.votesEvent && p.stage !== "voting" ? `<div class="row" style="gap:14px">${cells(p.votes, m.pids)}<span style="font-size:12px;color:var(--ink2)">${m.pids.filter((pid) => p.votes[pid] === false).join("、") || "无人"}反对</span></div>${collapsedRow(ui, `votes:${q.index}:${p.index}`, "明细", "每人的投票与私下分析", voteRows(p, m, ui, now, false))}` : voteRows(p, m, ui, now, live);
     body += eventBlock("投票", vtitle, vmeta, vinner, p.stage === "voting");
   }
   if (p.stage === "execution" || p.stage === "result") body += executionBlock(p, q, m, ui, now, live, p.stage === "execution");
   if (p.stage === "result" && q.resultEvent) body += resultBlock(q, m, true, null);
   body += controlNotes(m);
-  const right = p.stage === "voting" ? `投票 ${got} / 5` : p.stage === "execution" ? "执行中" : p.stage === "result" ? "已结算" : "";
+  const right = p.stage === "voting" ? `投票 ${got} / ${m.players}` : p.stage === "execution" ? "执行中" : p.stage === "result" ? "已结算" : "";
   out += panel("本轮进程", situ, right, body);
   return out;
 }
@@ -344,10 +344,10 @@ function gameOverLeft(st) {
   let blocks = "";
   if (a && a.turn) {
     const t = a.turn;
-    const cands = PIDS.filter((pid) => pid !== a.assassin);
+    const cands = m.pids.filter((pid) => pid !== a.assassin);
     blocks += eventBlock("刺杀", "刺客的最后一手", turnMeta(t), `<div class="entry" style="padding:4px 0">${avatar(a.assassin, m)}<div class="body"><div class="head"><div class="row"><span class="name">${nameOf(a.assassin, m)}</span>${tag(`刺杀 ${a.target}`, "evil")}<span style="font-size:12px;color:var(--ink2)">候选 ${cands.join("、")}</span></div></div>${invalidNote(t)}${privateBlock(ui, `priv:${t.seq}`, t.private, true)}${reasoningBlock(ui, `reason:${t.seq}`, t)}</div></div>`);
   }
-  const reveal = PIDS.map((pid) => `<div class="reveal">${avatar(pid, m, "s")}<span class="name">${nameOf(pid, m)}</span>${sideChip(sideOf(m.assignments[pid]))}<span class="info">开局所知：${esc(hiddenInfo(pid, m.assignments))}</span></div>`).join("");
+  const reveal = m.pids.map((pid) => `<div class="reveal">${avatar(pid, m, "s")}<span class="name">${nameOf(pid, m)}</span>${sideChip(sideOf(m.assignments[pid]))}<span class="info">开局所知：${esc(hiddenInfo(pid, m.assignments, m.pids))}</span></div>`).join("");
   blocks += eventBlock("公布", "角色公布", fmtTime(o.event.ts), `<div class="col">${reveal}</div>`);
   const last = m.quests[m.quests.length - 1];
   if (last && last.resultEvent) blocks = collapsedRow(ui, "final-result", "最后一次结算", `第 ${last.index} 次任务${last.succeeded ? "成功" : "失败"}`, resultBlock(last, m, false, null)) + blocks;
@@ -358,7 +358,7 @@ function questsRecap(st) {
   const m = st.model, ui = st.ui;
   return m.quests.map((q) => collapsedRow(ui, `recap:${q.index}`, `第 ${q.index} 次任务`, `${q.proposals.length} 次提案 · ${q.succeeded == null ? "未完成" : q.succeeded ? "成功" : `失败 · ${q.failCount} 张失败牌`}`, q.proposals.map((p) => {
     const yes = Object.values(p.votes).filter(Boolean).length;
-    return `<div style="padding:8px 0"><div class="row" style="gap:10px;margin-bottom:6px"><span class="stepchip">提案 ${p.index}</span><span style="font-size:13px">队长 ${mono(p.leader)} · 队伍 ${mono(p.team.join(" ") || "—")} · ${p.approved == null ? "未投票" : `${yes} : ${PIDS.length - yes} ${p.approved ? "通过" : "否决"}`}</span></div>${proposalDiscussion(p, m, ui, 0, false)}${p.proposeTurn ? eventBlock("提案", `队长 ${p.leader} 提出队伍 ${p.team.join("、")}`, turnMeta(p.proposeTurn), `<p class="text" style="font-size:13px">${esc(p.proposeTurn.speech || "")}</p>${privateBlock(ui, `priv:${p.proposeTurn.seq}`, p.proposeTurn.private)}`) : ""}${p.votesEvent ? eventBlock("投票", `${yes} : ${PIDS.length - yes} ${p.approved ? "通过" : "否决"}`, fmtTime(p.votesEvent.ts), voteRows(p, m, ui, 0, false)) : ""}${p.approved ? executionBlock(p, q, m, ui, 0, false, false) : ""}</div>`;
+    return `<div style="padding:8px 0"><div class="row" style="gap:10px;margin-bottom:6px"><span class="stepchip">提案 ${p.index}</span><span style="font-size:13px">队长 ${mono(p.leader)} · 队伍 ${mono(p.team.join(" ") || "—")} · ${p.approved == null ? "未投票" : `${yes} : ${m.players - yes} ${p.approved ? "通过" : "否决"}`}</span></div>${proposalDiscussion(p, m, ui, 0, false)}${p.proposeTurn ? eventBlock("提案", `队长 ${p.leader} 提出队伍 ${p.team.join("、")}`, turnMeta(p.proposeTurn), `<p class="text" style="font-size:13px">${esc(p.proposeTurn.speech || "")}</p>${privateBlock(ui, `priv:${p.proposeTurn.seq}`, p.proposeTurn.private)}`) : ""}${p.votesEvent ? eventBlock("投票", `${yes} : ${m.players - yes} ${p.approved ? "通过" : "否决"}`, fmtTime(p.votesEvent.ts), voteRows(p, m, ui, 0, false)) : ""}${p.approved ? executionBlock(p, q, m, ui, 0, false, false) : ""}</div>`;
   }).join(""))).join("");
 }
 
@@ -382,7 +382,7 @@ function rightColumn(st) {
       ["裁判日志", fileLink(st.id, "events.jsonl", mono("events.jsonl")) + dim(" · 每次调用的 usage 与费用")],
       ["公开状态", fileLink(st.id, "public.json", mono("public.json"))],
       ["结果", fileLink(st.id, "result.json", mono("result.json"))],
-      ["玩家线程", PIDS.map((pid) => nav(`#/g/${st.id}/p/${pid}`, mono(pid))).join(" ")],
+      ["玩家线程", m.pids.map((pid) => nav(`#/g/${st.id}/p/${pid}`, mono(pid))).join(" ")],
     ]);
   } else {
     out += modelStats(st);
@@ -399,7 +399,7 @@ function modelStats(st) {
     ["延迟", avg == null ? "—" : m2(`平均 ${fmtSecs(avg)}`) + slow],
     ["无效回复", `${s.invalid} 次` + dim(` · 兜底 ${s.fallbacks} 次${s.voided ? ` · 掐断 ${s.voided} 次` : ""}`)],
     ["费用", m2(`${fmtCost(s.cost)} 元`) + dim(" · 空闲时段价")],
-  ], `${fileLink(st.id, "events.jsonl", "下载裁判日志")}${nav(`#/g/${st.id}/report`, "复盘稿")}<span class="dim">玩家线程</span>${PIDS.map((pid) => nav(`#/g/${st.id}/p/${pid}`, pid)).join(" ")}`);
+  ], `${fileLink(st.id, "events.jsonl", "下载裁判日志")}${nav(`#/g/${st.id}/report`, "复盘稿")}<span class="dim">玩家线程</span>${m.pids.map((pid) => nav(`#/g/${st.id}/p/${pid}`, pid)).join(" ")}`);
 }
 function questRecord(st) {
   const m = st.model;
@@ -412,9 +412,9 @@ function questRecord(st) {
     const note = state === "current" && p && !m.over ? `<span class="qnote">提案 ${p.index} · 队长 ${mono(p.leader)} · ${stageZh[p.stage] || ""}</span>` : "";
     const props = q.proposals.filter((pp) => pp.team.length || pp.votesEvent).map((pp) => {
       const yes = Object.values(pp.votes).filter(Boolean).length, got = Object.keys(pp.voteTurns).length;
-      const verdict = pp.votesEvent ? `<span class="verdict mono ${pp.approved ? "ok" : ""}">${yes} : ${PIDS.length - yes} ${pp.approved ? "通过" : "否决"}</span>` : `<span class="verdict mono live">投票中 ${got} / 5</span>`;
+      const verdict = pp.votesEvent ? `<span class="verdict mono ${pp.approved ? "ok" : ""}">${yes} : ${m.players - yes} ${pp.approved ? "通过" : "否决"}</span>` : `<span class="verdict mono live">投票中 ${got} / ${m.players}</span>`;
       const votes = pp.votesEvent ? pp.votes : Object.fromEntries(Object.entries(pp.voteTurns).map(([k, t]) => [k, t.vote]));
-      return `<div class="prow"><div class="phead"><span>提案 ${pp.index} · 队长 ${mono(pp.leader)} · 队伍 ${mono(pp.team.join(" "))}</span>${verdict}</div>${cells(votes)}</div>`;
+      return `<div class="prow"><div class="phead"><span>提案 ${pp.index} · 队长 ${mono(pp.leader)} · 队伍 ${mono(pp.team.join(" "))}</span>${verdict}</div>${cells(votes, m.pids)}</div>`;
     }).join("");
     let cards = "";
     if (q.team.length && (Object.keys(q.cards).length || p.stage === "execution")) {
@@ -457,11 +457,11 @@ export function renderLobby(st) {
     ["平均用时", stats.finished ? fmtDuration(stats.duration_s / stats.finished) : "—", "只算正常打完的局"],
   ].map(([l, v, s]) => `<div class="stat-tile"><span class="tl">${l}</span><span class="tv">${v}</span><span class="ts">${s}</span></div>`).join("");
   const rows = shown.map((g) => lobbyRow(g)).join("") || `<div class="empty">${games.length ? "这个筛选下没有对局。" : "还没有对局，右侧新开一局。"}</div>`;
-  const table = `<div class="table"><div class="thead-tools"><div class="filters">${filters.map(([k, t]) => `<button class="filter ${st.filter === k ? "on" : ""}" data-act="filter" data-arg="${k}">${t}</button>`).join("")}</div><span class="dim" style="font-size:12px">按开始时间倒序 · 进行中的局实时刷新</span></div><div class="trow head"><span>局号</span><span>开始</span><span>模型 · 隐藏思考</span><span>任务</span><span>状态与结果</span><span>用时</span><span>费用 元</span><span></span></div>${rows}</div>`;
+  const table = `<div class="table"><div class="thead-tools"><div class="filters">${filters.map(([k, t]) => `<button class="filter ${st.filter === k ? "on" : ""}" data-act="filter" data-arg="${k}">${t}</button>`).join("")}</div><span class="dim" style="font-size:12px">按开始时间倒序 · 进行中的局实时刷新</span></div><div class="trow head"><span>局号</span><span>开始</span><span>人数 · 模型 · 隐藏思考</span><span>任务</span><span>状态与结果</span><span>用时</span><span>费用 元</span><span></span></div>${rows}</div>`;
   return top + `<div class="main lobby"><div><div class="stats-strip">${tiles}</div>${table}</div><div>${newGameForm(st)}</div></div>`;
 }
 function lobbyRow(g) {
-  const dots = QUEST_SIZES.map((_, i) => { const q = g.quests[i]; const k = !q ? "" : q.succeeded === true ? "success" : q.succeeded === false ? "fail" : LIVE.has(g.status) ? "current pulse" : ""; return `<span class="${k}"></span>`; }).join("");
+  const dots = questSizes(g.player_count).map((_, i) => { const q = g.quests[i]; const k = !q ? "" : q.succeeded === true ? "success" : q.succeeded === false ? "fail" : LIVE.has(g.status) ? "current pulse" : ""; return `<span class="${k}"></span>`; }).join("");
   const phaseZh = { INIT: "开局", DISCUSSION: "讨论", PROPOSAL: "提案", VOTING: "投票", QUEST_EXECUTION: "执行", QUEST_RESULT: "结算", ASSASSINATION: "刺杀", GAME_OVER: "结束" };
   const where = g.current_quest ? `第 ${g.current_quest} 次任务 · ${phaseZh[g.phase] || ""}` : "开局";
   const score = `好人 ${g.success_count} : 邪恶 ${g.fail_count}`;
@@ -475,7 +475,7 @@ function lobbyRow(g) {
   else if (g.status === "error") { res = `出错 · ${esc(g.error || "")}`; cls = "red"; }
   else { res = `已中断 · ${where}`; }
   const action = LIVE.has(g.status) || g.status === "queued" ? `<span class="btn primary" style="justify-content:center">进入</span>` : `<span class="btn ghost" style="justify-content:center">${g.status === "finished" ? "复盘" : "查看"}</span>`;
-  return `<div class="trow ${rowCls}" data-act="nav" data-arg="#/g/${g.id}" style="cursor:pointer"><span class="c">${g.id}</span><span class="c dim">${fmtDate(g.started_at || g.created_at)}</span><span class="c dim">${g.random_players ? "随机玩家" : `${esc(g.model)} · ${g.thinking ? "开" : "关"}`}</span><span class="dots">${dots}</span><span class="res ${cls}" title="${esc(res.replace(/<[^>]+>/g, ""))}">${res}</span><span class="c dim">${fmtDuration(g.duration_s)}</span><span class="c">${fmtCost(g.cost_cny)}</span>${action}</div>`;
+  return `<div class="trow ${rowCls}" data-act="nav" data-arg="#/g/${g.id}" style="cursor:pointer"><span class="c">${g.id}</span><span class="c dim">${fmtDate(g.started_at || g.created_at)}</span><span class="c dim">${g.player_count ?? 5} 人 · ${g.random_players ? "随机玩家" : `${esc(g.model)} · ${g.thinking ? "开" : "关"}`}</span><span class="dots">${dots}</span><span class="res ${cls}" title="${esc(res.replace(/<[^>]+>/g, ""))}">${res}</span><span class="c dim">${fmtDuration(g.duration_s)}</span><span class="c">${fmtCost(g.cost_cny)}</span>${action}</div>`;
 }
 function newGameForm(st) {
   const f = st.form, cfg = st.config || {};
@@ -485,13 +485,14 @@ function newGameForm(st) {
   const field = (label, control, hint = "") => `<div class="field"><label>${label}</label>${control}${hint ? `<span class="hint">${hint}</span>` : ""}</div>`;
   return `<form class="form" data-act="create-form"><div class="fhead"><span class="ftitle">新开一局</span><span class="fnote">等同命令行参数</span></div>
   ${field("种子", `<input class="input" name="seed" inputmode="numeric" placeholder="留空则随机" value="${esc(f.seed)}" data-form="seed">`, "同一种子重放同样的角色分配与第一任队长；开多局时依次加一")}
-  ${field("模型", `<select class="select" name="model" data-form="model" ${f.random ? "disabled" : ""}>${models.map((mm) => `<option value="${esc(mm)}" ${f.model === mm ? "selected" : ""}>${esc(mm)}</option>`).join("")}</select>`, "五个座位使用同一模型")}
+  ${field("人数", `<select class="select" name="players" data-form="players">${PLAYER_CHOICES.map((n) => `<option value="${n}" ${Number(f.players) === n ? "selected" : ""}>${n} 人</option>`).join("")}</select>`, `任务人数 ${questSizes(Number(f.players) || 5).join("、")}，提案需 ${votesToApprove(Number(f.players) || 5)} 票通过`)}
+  ${field("模型", `<select class="select" name="model" data-form="model" ${f.random ? "disabled" : ""}>${models.map((mm) => `<option value="${esc(mm)}" ${f.model === mm ? "selected" : ""}>${esc(mm)}</option>`).join("")}</select>`, "所有座位使用同一模型")}
   ${field("隐藏思考", toggle("thinking", f.thinking, "开 · 一局 4 到 20 分钟", "关 · 一局约 3 到 5 分钟", f.random), "打开后输出 token 约 10 倍")}
   ${field("随机玩家", toggle("random", f.random, "开 · 不联网、零费用", "关 · 使用真实模型", noKey), noKey ? "未在 .env 里找到 DEEPSEEK_API_KEY，只能用随机玩家" : "用随机合法答案跑完整局，每次行动模拟 1.5 秒思考，用来试界面")}
   ${field("局数", `<input class="input" name="count" type="number" min="1" max="50" value="${esc(f.count)}" data-form="count">`, `同时最多 ${cfg.max_concurrent ?? 8} 局，多出的排队`)}
   ${st.error ? `<div class="error">${esc(st.error)}</div>` : ""}
   <button class="btn primary big" type="submit" style="justify-content:center" ${st.creating ? "disabled" : ""}>${st.creating ? "正在开局…" : Number(f.count) > 1 ? `开始 ${f.count} 局` : "开始对局并进入裁判席"}</button>
-  <div class="foot">开始后五位玩家先各收到一份系统提示，随后从第 1 次任务的讨论开始。中途关闭页面不影响对局，随时可以回来接着看。</div></form>`;
+  <div class="foot">开始后每位玩家先各收到一份系统提示，随后从第 1 次任务的讨论开始。中途关闭页面不影响对局，随时可以回来接着看。</div></form>`;
 }
 
 // ---------------------------------------------------------------- 玩家线程
@@ -502,7 +503,7 @@ export function renderThread(st) {
   const calls = events.filter((e) => e.kind === "llm_call" && e.player === pid);
   const role = m.assignments[pid], side = sideOf(role);
   const lastPrompt = calls.length ? calls[calls.length - 1].prompt_tokens : 0;
-  const top = `<div class="topbar"><div class="row" style="gap:14px">${nav(`#/g/${id}`, icon("arrow-left", 16), "back")}<div class="crumb">${nav("#/", "对局列表")}<span class="sep">/</span>${nav(`#/g/${id}`, `<span class="mono">${id}</span>`)}<span class="sep">/</span><span class="serif" style="font-size:17px;font-weight:700;color:var(--ink)">${nameOf(pid, m)} 的完整线程</span></div></div><div class="row" style="gap:18px"><div class="seatpick">${PIDS.map((p) => `<button class="${p === pid ? "on" : ""}" data-act="nav" data-arg="#/g/${id}/p/${p}">${p}</button>`).join("")}</div><span class="vsep"></span><span class="counter mono">${messages.length} 条消息 · ${calls.length} 次调用 · 线程 ${fmtTokens(lastPrompt)}</span>${fileLink(id, `players/${pid}.json`, `<span class="btn outline">${icon("download", 13)}导出 ${pid}.json</span>`)}</div></div>`;
+  const top = `<div class="topbar"><div class="row" style="gap:14px">${nav(`#/g/${id}`, icon("arrow-left", 16), "back")}<div class="crumb">${nav("#/", "对局列表")}<span class="sep">/</span>${nav(`#/g/${id}`, `<span class="mono">${id}</span>`)}<span class="sep">/</span><span class="serif" style="font-size:17px;font-weight:700;color:var(--ink)">${nameOf(pid, m)} 的完整线程</span></div></div><div class="row" style="gap:18px"><div class="seatpick">${m.pids.map((p) => `<button class="${p === pid ? "on" : ""}" data-act="nav" data-arg="#/g/${id}/p/${p}">${p}</button>`).join("")}</div><span class="vsep"></span><span class="counter mono">${messages.length} 条消息 · ${calls.length} 次调用 · 线程 ${fmtTokens(lastPrompt)}</span>${fileLink(id, `players/${pid}.json`, `<span class="btn outline">${icon("download", 13)}导出 ${pid}.json</span>`)}</div></div>`;
   const filters = [["all", "全部"], ["replies", "只看回复"], ["private", "只看私下分析"]];
   const hasReasoning = calls.some((c) => c.reasoning);
   const sub = `<div class="subhead"><div class="who">${avatar(pid, m, "m")}<div class="col" style="gap:2px"><div class="row"><span class="wname">${nameOf(pid, m)}</span>${sideChip(side)}<span style="font-size:12px;color:var(--ink2);display:inline-flex;align-items:center;gap:5px">${icon("eye", 11, "#9a9184")}${esc(hiddenInfo(pid, m.assignments))}</span></div><span class="wnote">每条裁判通知只包含它自己尚未看过的公开事件；这条线程从开局起从未清空，可见的私下分析是它唯一的跨轮记忆。${summary.random_players ? "随机玩家不调用模型，线程为空。" : ""}</span></div></div><div class="filters">${filters.map(([k, t]) => `<button class="filter ${st.filter === k ? "on" : ""}" data-act="thread-filter" data-arg="${k}">${t}</button>`).join("")}<button class="filter ${st.showReasoning ? "on" : ""}" data-act="thread-reasoning" ${hasReasoning ? "" : "disabled"} title="${hasReasoning ? "" : "本局关闭隐藏思考"}">隐藏推理${hasReasoning ? "" : " · 本局关闭"}</button></div></div>`;

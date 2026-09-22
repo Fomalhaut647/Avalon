@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from avalon.rules import MAX_INVALID_RETRIES, PLAYER_IDS
+from avalon.rules import DEFAULT_PLAYERS, MAX_INVALID_RETRIES, check_player_count, player_ids
 
 DEFAULT_BASE_URL = "https://api.deepseek.com"
 DEFAULT_MODEL = "deepseek-flash"
@@ -36,8 +36,10 @@ class Config:
     api_key: str
     base_url: str = DEFAULT_BASE_URL
     model: str = DEFAULT_MODEL
+    players: int = DEFAULT_PLAYERS
+    """本局人数，5 到 10。座位为 P1 到 P{players}。"""
     seat_models: dict[str, str] = field(default_factory=dict)
-    """座位 -> 模型 ID。v1 五项相同，结构上允许各不相同。"""
+    """座位 -> 模型 ID。目前每座相同，结构上允许各不相同。"""
     seed: int = 0
     games_dir: Path = Path("games")
     max_invalid_retries: int = MAX_INVALID_RETRIES
@@ -48,8 +50,9 @@ class Config:
     """是否开启模型的隐藏思考。默认开，见 docs/decisions/0010；关闭时模型只有可见的私下分析可用，更快更省。"""
 
     def __post_init__(self) -> None:
+        check_player_count(self.players)
         if not self.seat_models:
-            self.seat_models = {pid: self.model for pid in PLAYER_IDS}
+            self.seat_models = {pid: self.model for pid in player_ids(self.players)}
 
 
 def _truthy(value: str) -> bool:
@@ -62,7 +65,9 @@ def _thinking_from_env() -> bool:
     return True if not raw else _truthy(raw)
 
 
-def load_config(seed: int, games_dir: Path | None = None, *, parallel: bool = True) -> Config:
+def load_config(
+    seed: int, games_dir: Path | None = None, *, parallel: bool = True, players: int = DEFAULT_PLAYERS
+) -> Config:
     """读取 .env 中的 DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL / DEEPSEEK_THINKING。"""
     from dotenv import load_dotenv
 
@@ -75,6 +80,7 @@ def load_config(seed: int, games_dir: Path | None = None, *, parallel: bool = Tr
         base_url=os.environ.get("DEEPSEEK_BASE_URL", "").strip() or DEFAULT_BASE_URL,
         model=os.environ.get("DEEPSEEK_MODEL", "").strip() or DEFAULT_MODEL,
         seed=seed,
+        players=players,
         games_dir=games_dir or Path("games"),
         parallel=parallel,
         thinking=_thinking_from_env(),

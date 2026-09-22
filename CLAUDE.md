@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-本仓库是"五个 AI 玩家对局的阿瓦隆"。动手前先读：
+本仓库是"5 到 10 个 AI 玩家对局的阿瓦隆"。动手前先读：
 
 - [docs/architecture.md](docs/architecture.md)：系统结构与模块职责
 - [docs/rules.md](docs/rules.md)：游戏规则，代码行为以此为准
@@ -11,7 +11,7 @@
 
 - 术语与代码命名一一对应，见 rules.md 第一节：game、quest、proposal、speech、turn、leader、seat、team、phase。
 - 所有面向模型的文字只放在 `avalon/prompts.py`。
-- 规则函数放在 `avalon/rules.py`，必须是无状态纯函数。
+- 规则函数放在 `avalon/rules.py`，必须是无状态纯函数；人数作为参数传入，不设「当前几人局」的全局变量。
 - 玩家的私下分析绝不进入其他玩家的上下文。
 - 改设计决策时新写一条 ADR，不修改旧的。
 - 现状文档（rules.md、architecture.md）随代码改动同步更新。
@@ -25,7 +25,7 @@
 ```bash
 uv sync
 uv run pytest                          # 全部不联网
-uv run avalon --random-players --seed 1  # 不联网自检整局
+uv run avalon --random-players --seed 1  # 不联网自检整局，加 --players N 换人数（5 到 10）
 uv run avalon --seed 42                  # 真实模型，默认开隐藏思考一局约 5 到 20 分钟，关闭后 3 到 5 分钟
 uv run avalon serve                      # 网页裁判席 http://127.0.0.1:8000/ ；改前端刷新页面即生效，改 Python 要重启服务
 ```
